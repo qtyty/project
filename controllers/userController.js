@@ -18,14 +18,18 @@ const sendCode=async (ctx,next)=>{
     if(!reg.test(email)){
         ctx.body={
             code:-2,
-            message:'邮箱不正确'
+            data:{
+                message:'邮箱不正确'
+            }
         }
     }
     const usermail=await User.findOne({where:{email:email}})
     if(usermail){
         ctx.body={
             code:1,
-            message:'邮箱已注册'
+            data:{
+                message:'邮箱已注册'
+            }
         }
     }
     else{
@@ -43,12 +47,16 @@ const sendCode=async (ctx,next)=>{
         await transporter.sendMail(mailOptions)
         ctx.body = {
             code: 0,
-            message: '邮箱验证码发送成功！'
+            data:{
+                message: '邮箱验证码发送成功！'
+            }
         }
       } catch(e) {
         ctx.body = {
             code: -1,
-            message: '邮箱验证码发送失败！'
+            data:{
+                message: '邮箱验证码发送失败！'
+            }
         }
       }
     }
@@ -59,39 +67,49 @@ const register=async (ctx,next)=>{
     const usermail=await User.findOne({where:{email:email}})
     if(usermail){
         ctx.body={
-            code:-1,
-            message:'邮箱已注册'
+            code:-2,
+            data:{
+                message:'邮箱已注册'
+            }
         }
     }
     else{
         const mailCode=await Email.findOne({where:{email:email}})
         if(!mailCode){
             ctx.body={
-                code:-2,
-                message:'未发送验证码'
+                code:-1,
+                data:{
+                    message:'未发送验证码'
+                }
             }
         }
         const codetime=Date.now()-mailCode.createtime
         if(codetime>60*10*1000){
             await Email.destroy({where:{email:email}})
             ctx.body={
-                code:0,
-                message:'验证码已过期'
+                code:2,
+                data:{
+                    message:'验证码已过期'
+                }
             }
         }
         else{
             if(code != mailCode.code){
                 ctx.body={
                     code:1,
-                    message:'验证码不正确'
+                    data:{
+                        message:'验证码不正确'
+                    }
                 }
             }
             else{
                 await User.create({email:email,password:password,status:status})
                 await Email.destroy({where:{email:email}})
                 ctx.body={
-                    code:2,
-                    message:'注册成功'
+                    code:0,
+                    data:{
+                        message:'注册成功'
+                    }
                 }
             }
         }
@@ -127,14 +145,14 @@ const login=async (ctx,next)=>{
             }
             else{
                 ctx.body={
-                    code:1,
+                    code:2,
                     message:'身份不正确'
                 }
             }
         }
         else{
             ctx.body={
-                code:2,
+                code:1,
                 message:'邮箱或密码错误'
             }
         }
@@ -142,13 +160,14 @@ const login=async (ctx,next)=>{
 }
 
 const logout=async (ctx,next)=>{
-    ctx.session = null
-    ctx.response.redirect('/')
     ctx.body={
         code:1,
         message:'退出登录'
     }
 }
+
+
+
 
 module.exports={
     sendCode,
