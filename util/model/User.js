@@ -20,14 +20,29 @@ const User=sequelize.define('User',{
     qq:{type:Sequelize.STRING},
     weChat:{type:Sequelize.STRING},
     status:{type:Sequelize.STRING}
-})
+},{
+    timestamps: false
+  })
 
 const Email=sequelize.define('Email',{
     email:{type:Sequelize.STRING,allowNULL:false,primaryKey:true},
     code:{type:Sequelize.STRING,allowNULL:false},
     createtime:{type:Sequelize.STRING,allowNULL:false}
-})
+},{
+    timestamps: false
+  })
+
+const University=sequelize.define('University',{
+    id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
+    name:{type:Sequelize.STRING,unique:true},
+    charge:{type:Sequelize.STRING},
+    chat:{type:Sequelize.STRING},
+    address:{type:Sequelize.STRING}
+},{
+    timestamps: false
+  })
+
 
 //sequelize.sync({force:true}).then(()=>{console.log('模型同步')})
-sequelize.sync({}).then(()=>{console.log('模型同步')})
-module.exports={User,Email}
+sequelize.sync().then(()=>{console.log('模型同步')})
+module.exports={User,Email,University}

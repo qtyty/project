@@ -14,6 +14,7 @@ const newContest=async (ctx,next)=>{
             }
         }
     }
+    else{
     if(type=='single'){
         if(!name || !startApp || !endApp || !startHold || !endHold || !rewards || !rules || !publish){
             ctx.body={
@@ -23,25 +24,25 @@ const newContest=async (ctx,next)=>{
                 }
             }
         }
-        else if(publish==yes){
-            let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'published'}
-            if(rewards) Select['rewards']=rewards
+        else if(publish=='yes'){
+            let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'startHold':startHold,'endHold':endHold,'rules':rules,'rewards':rewards,'state':'published'}
+            if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
-                    message:'新建成功'
+                    message:'新建成功,发布成功'
                 }
             }
         }
-        else if(publish==no){
-            let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'ready'}
-            if(rewards) Select['rewards']=rewards
+        else if(publish=='no'){
+            let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'startHold':startHold,'endHold':endHold,'rules':rules,'rewards':rewards,'state':'ready'}
+            if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
-                    message:'新建成功'
+                    message:'新建成功，存为草稿'
                 }
             }
         }
@@ -63,9 +64,9 @@ const newContest=async (ctx,next)=>{
                 }
             }
         }
-        else if(publish==yes){
-            let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'published'}
-            if(rewards) Select['rewards']=rewards
+        else if(publish=='yes'){
+            let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'startHold':startHold,'endHold':endHold,'rules':rules,'rewards':rewards,'state':'published'}
+            if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
                 code:0,
@@ -74,9 +75,9 @@ const newContest=async (ctx,next)=>{
                 }
             }
         }
-        else if(publish==no){
-            let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'ready'}
-            if(rewards) Select['rewards']=rewards
+        else if(publish=='no'){
+            let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'startHold':startHold,'endHold':endHold,'rules':rules,'rewards':rewards,'state':'ready'}
+            if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
                 code:0,
@@ -103,6 +104,7 @@ const newContest=async (ctx,next)=>{
         }
     }
 }
+}
 
 const showContest=async (ctx,next)=>{
     const {ContestName,state,type}=ctx.request.query
@@ -110,25 +112,57 @@ const showContest=async (ctx,next)=>{
     if(ContestName) Select['ContestName']=ContestName
     if(state) Select['state']=state
     if(type) Select['type']=type
-    const result=await contest.findAll({where:Select})
+    const result=await contest.findAll({attributes:['cid','name','type','startApp','endApp','startHold','endHold','state']},{where:Select})
     if(result){
-
+        ctx.body={
+            code:0,
+            result
+        }
     }
     else{
         ctx.body={
             code:-1,
             data:{
-                message:'无信息'
+                message:'无结果'
             }
         }
     }
 }
 
 const updateContest=async (ctx,next)=>{
-    
+    const {name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
+
+}
+
+
+const deleteContest=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    //console.log(id)
+    for(let x of id){
+        //console.log(x)
+        try{
+            await contest.destroy({where:{cid:x}})
+            ctx.body={
+                code:0,
+                data:{
+                    message:'删除成功'
+                }
+            }
+        }catch(e){
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'删除失败'
+                }
+            }
+        }
+    }
 }
 
 
 module.exports={
-    newContest
+    newContest,
+    showContest,
+    updateContest,
+    deleteContest
 }

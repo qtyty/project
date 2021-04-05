@@ -1,4 +1,4 @@
-const {User,Email} = require('../util/model/User')
+const {User,Email,University} = require('../util/model/User')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
 const random=require('string-random')
@@ -53,6 +53,7 @@ const sendCode=async (ctx,next)=>{
             }
         }
       } catch(e) {
+        throw new Error(e)
         ctx.body = {
             code: -1,
             data:{
@@ -163,10 +164,15 @@ const login=async (ctx,next)=>{
 }
 
 const logout=async (ctx,next)=>{
+    try{
+    ctx.headers.authorization=null
     ctx.body={
         code:1,
-        message:'退出登录'
+        message:'退出登录成功'
     }
+}catch(e){
+    throw new Error(e)
+}
 }
 
 
@@ -237,6 +243,15 @@ const updateInfo=async (ctx,next)=>{
 }
 
 
+const showUniversity=async (ctx,next)=>{
+    const data=await University.findAll({attributes: ['id','name']})
+    //console.log(JSON.stringify(data))
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
 
 module.exports={
     sendCode,
@@ -244,5 +259,6 @@ module.exports={
     login,
     showInfo,
     updateInfo,
-    logout
+    logout,
+    showUniversity
 }
