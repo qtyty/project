@@ -2,6 +2,8 @@ const {User,Email} = require('../util/model/User')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
 const random=require('string-random')
+const jwt = require('jsonwebtoken')
+const secret='secret'
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
   port: 465,
@@ -36,7 +38,6 @@ const sendCode=async (ctx,next)=>{
     const code=random(4,{letters:false})
     const mailOptions = {
         from: userEmail,
-        cc: userEmail,
         to: email,
         subject: '验证码',
         text: '说明内容',
@@ -104,11 +105,13 @@ const register=async (ctx,next)=>{
             }
             else{
                 await User.create({email:email,password:password,status:status})
+                const uid=User.findOne({where:{email:email}})
                 await Email.destroy({where:{email:email}})
                 ctx.body={
                     code:0,
                     data:{
-                        message:'注册成功'
+                        message:'注册成功',
+                        //token:jwt.sign({uid:uid,status:status},secret,{expiresIn:'4h'})
                     }
                 }
             }
@@ -126,21 +129,21 @@ const login=async (ctx,next)=>{
         }
     }
     else{
-        const user=await User.findOne({attributes: ['email', 'password','status']},{where:{email:email}})
+        const user=await User.findOne({attributes: ['uid','email', 'password','status']},{where:{email:email}})
         if(!user){
             ctx.body={
                 code:-1,
                 message:'用户未注册'
             }
         }
-        if(email===user.email && password===user.password){
-            if(status===user.status){
+        if(email==user.email && password==user.password){
+            if(status==user.status){
                 ctx.body={
                     code:0,
                     data:{
                         message:'登录成功',
-                        email:user.email
-                    }
+                        token:jwt.sign({uid:user.uid,status:status},secret,{expiresIn:'4h'})
+                    },
                 }
             }
             else{
@@ -167,11 +170,79 @@ const logout=async (ctx,next)=>{
 }
 
 
+const showInfo=async (ctx,next)=>{
+    const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const email=emailtoken['uid']
+    const result=await User.findOne({where:{uid:email}})
+    ctx.body={
+        code:0,
+        data:{
+            chineseName:result.chineseName,
+            englishName:result.englishName,
+            sex:result.sex,
+            school:result.school,
+            year:result.year,
+            id:result.id,
+            phone:result.phone,
+            email:result.email,
+            country:result.country,
+            city:result.city,
+            address:result.address,
+            zipCode:result.zipCode,
+            qq:result.qq,
+            weChat:result.weChat
+        }
+    }
+}
+
+
+const updateInfo=async (ctx,next)=>{
+    const {chineseName,englishName,sex,school,year,id,phone,email,country,city,address,zipCode,qq,weChat}=ctx.request.body
+    const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=emailtoken['uid']
+    let Select={}
+    if(chineseName) Select['chineseName']=chineseName
+    if(englishName) Select['english']=englishName
+    if(sex) Select['sex']=sex
+    if(school) Select['school']=school
+    if(year) Select['year']=year
+    if(id) Select['id']=id
+    if(phone) Select['phone']=phone
+    if(email) Select['email']=email
+    if(country) Select['country']=country
+    if(city) Select['city']=city
+    if(address) Select['address']=address
+    if(zipCode) Select['zipCode']=zipCode
+    if(qq) Select['qq']=qq
+    if(weChat) Select['weChat']=weChat
+
+    try{
+        await User.update(Select,{where:{uid:uid}})
+        ctx.body={
+            code:0,
+            data:{
+                message:'修改成功'
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:1,
+            data:{
+                message:'修改失败'
+            }
+        }
+    }
+
+}
+
 
 
 module.exports={
     sendCode,
     register,
     login,
+    showInfo,
+    updateInfo,
     logout
 }

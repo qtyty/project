@@ -1,9 +1,11 @@
 const { sequelize } = require('../util/init')
 const {contest}=require('../util/model/contest')
+const jwt = require('jsonwebtoken')
+const secret='secret'
 
 const newContest=async (ctx,next)=>{
     const {name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
-    const ContestName=await contest.findOne(where:{name:name})
+    const ContestName=await contest.findOne({where:{name:name}})
     if(ContestName){
         ctx.body={
             code:-1,
@@ -12,7 +14,7 @@ const newContest=async (ctx,next)=>{
             }
         }
     }
-    if(type=='group'){
+    if(type=='single'){
         if(!name || !startApp || !endApp || !startHold || !endHold || !rewards || !rules || !publish){
             ctx.body={
                 code:-2,
@@ -22,7 +24,9 @@ const newContest=async (ctx,next)=>{
             }
         }
         else if(publish==yes){
-            await contest.create({name:name,type:type,startApp:startApp,endApp:endApp,rules:rules,rewards:rewards,remark:remark,status:'published'})
+            let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'published'}
+            if(rewards) Select['rewards']=rewards
+            await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
@@ -31,7 +35,9 @@ const newContest=async (ctx,next)=>{
             }
         }
         else if(publish==no){
-            await contest.create({name:name,type:type,startApp:startApp,endApp:endApp,rules:rules,rewards:rewards,remark:remark,status:'ready'})
+            let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'ready'}
+            if(rewards) Select['rewards']=rewards
+            await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
@@ -43,7 +49,7 @@ const newContest=async (ctx,next)=>{
             ctx.body={
                 code:-4,
                 data:{
-                    message:'publish错误 新建失败'
+                    message:'新建失败'
                 }
             }
         }
@@ -58,7 +64,9 @@ const newContest=async (ctx,next)=>{
             }
         }
         else if(publish==yes){
-            await contest.create({name:name,type:type,isEqual:isEqual,limit:limit,startApp:startApp,endApp:endApp,rules:rules,rewards:rewards,remark:remark,status:'published'})
+            let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'published'}
+            if(rewards) Select['rewards']=rewards
+            await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
@@ -67,7 +75,9 @@ const newContest=async (ctx,next)=>{
             }
         }
         else if(publish==no){
-            await contest.create({name:name,type:type,isEqual:isEqual,limit:limit,startApp:startApp,endApp:endApp,rules:rules,rewards:rewards,remark:remark,status:'ready'})
+            let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'rules':rules,'rewards':rewards,'status':'ready'}
+            if(rewards) Select['rewards']=rewards
+            await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
@@ -79,7 +89,7 @@ const newContest=async (ctx,next)=>{
             ctx.body={
                 code:-5,
                 data:{
-                    message:'publish错误 新建失败'
+                    message:'新建失败'
                 }
             }
         }
@@ -95,39 +105,27 @@ const newContest=async (ctx,next)=>{
 }
 
 const showContest=async (ctx,next)=>{
-    contest={ContestName,state,type}=ctx.request.query
-    let sql='select * from contests where 1=1'
-    if(ContestName) sql+='and name=ContestName'
-    if(state) sql+='and state=state'
-    if(type) sql+='and type=type'
-    const result=await sequelize.query(sql)
+    const {ContestName,state,type}=ctx.request.query
+    Select={}
+    if(ContestName) Select['ContestName']=ContestName
+    if(state) Select['state']=state
+    if(type) Select['type']=type
+    const result=await contest.findAll({where:Select})
     if(result){
-        ctx.body={
-            code:0,
-            data:{
-                ContestName:result.name,
-                type:result.name,
-                startApp:result.startApp,
-                endApp:result.endApp,
-                startHold:result.startHold,
-                endHold:result.endHold,
-                address:result.address,
-                state:result.state
-            }
-        }
+
     }
     else{
         ctx.body={
-            code:1,
+            code:-1,
             data:{
-                message:'无结果'
+                message:'无信息'
             }
         }
     }
 }
 
 const updateContest=async (ctx,next)=>{
-
+    
 }
 
 

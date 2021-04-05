@@ -3,7 +3,8 @@ const { FailedDependency } = require('http-errors')
 const {Sequelize,sequelize} = require('../init')
 
 const User=sequelize.define('User',{
-    email:{type:Sequelize.STRING,primaryKey:true},
+    uid:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
+    email:{type:Sequelize.STRING},
     password:{type:Sequelize.STRING},
     chineseName:{type:Sequelize.STRING},
     englishName:{type:Sequelize.STRING},

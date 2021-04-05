@@ -16,5 +16,6 @@ const contest=sequelize.define('Contest',{
     address:{type:Sequelize.STRING}
 })
 
-sequelize.sync({alter:true}).then(()=>{console.log('模型同步')})
+//sequelize.sync({alter:true}).then(()=>{console.log('模型同步')})
+sequelize.sync({}).then(()=>{console.log('模型同步')})
 module.exports={contest}
