@@ -38,6 +38,7 @@ router.post('/user/updateInfo',user.updateInfo)
 router.get('/user/showUniversity',user.showUniversity)
 router.post('/user/newContest',contest.newContest)
 router.get('/user/showContest',contest.showContest)
+router.post('/user/updateContest',contest.updateContest)
 router.post('/user/deleteContest',contest.deleteContest)
 
 app.use(bodyParser())

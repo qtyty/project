@@ -1,6 +1,7 @@
 const { sequelize } = require('../util/init')
 const {contest}=require('../util/model/contest')
 const jwt = require('jsonwebtoken')
+const { Sequelize } = require('sequelize/types')
 const secret='secret'
 
 const newContest=async (ctx,next)=>{
@@ -130,8 +131,46 @@ const showContest=async (ctx,next)=>{
 }
 
 const updateContest=async (ctx,next)=>{
-    const {name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
+    const {cid,name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
+    const result=await contest.findOne({where:{cid:cid}})
+    let Select={}
+    if(name) Select['name']=name
+    if(type){
+        if(type=='single') {Select['type']=type}
+        else if(type=='group'){
+            Select['type']=type
+            if(isEqual) Select['isEqual']=isEqual
+            if(limit) Select['limit']=limit
+        }
+    }
+    if(cid.type=='group'){
+        if(isEqual) Select['isEqual']=isEqual
+        if(limit) Select['limit']=limit
+    }
+    if(startApp) Select['startApp']=startApp
+    if(endApp) Select['endApp']=endApp
+    if(startHold) Select['startHold']=startHold
+    if(endHold) Select['endHold']=endHold
+    if(rules) Select['rewards']=rewards
+    if(remark) Select['remark']=remark
+    if(publish) Select['publish']=publish
 
+    try{
+        await contest.update(Select,{where:{cid:cid}})
+        ctx.body={
+            code:0,
+            data:{
+                message:'修改成功'
+            }
+        }
+    }catch(e){
+        ctx.body={
+            code:-1,
+            data:{
+                message:'修改失败'
+            }
+        }
+    }
 }
 
 
