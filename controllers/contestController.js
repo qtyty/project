@@ -2,7 +2,8 @@ const { sequelize } = require('../util/init')
 const {contest}=require('../util/model/contest')
 const jwt = require('jsonwebtoken')
 const secret='secret'
-
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 const newContest=async (ctx,next)=>{
     const {name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
     const ContestName=await contest.findOne({where:{name:name}})
@@ -16,15 +17,7 @@ const newContest=async (ctx,next)=>{
     }
     else{
     if(type=='single'){
-        if(!name || !startApp || !endApp || !startHold || !endHold || !rewards || !rules || !publish){
-            ctx.body={
-                code:-2,
-                data:{
-                    message:'信息请填写完整'
-                }
-            }
-        }
-        else if(publish=='yes'){
+        if(publish=='yes'){
             let Select={'name':name,'type':type,'startApp':startApp,'endApp':endApp,'startHold':startHold,'endHold':endHold,'rules':rules,'rewards':rewards,'state':'published'}
             if(remark) Select['remark']=remark
             await contest.create(Select)
@@ -40,7 +33,7 @@ const newContest=async (ctx,next)=>{
             if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
-                code:0,
+                code:1,
                 data:{
                     message:'新建成功，存为草稿'
                 }
@@ -48,7 +41,7 @@ const newContest=async (ctx,next)=>{
         }
         else{
             ctx.body={
-                code:-4,
+                code:2,
                 data:{
                     message:'新建失败'
                 }
@@ -56,22 +49,14 @@ const newContest=async (ctx,next)=>{
         }
     }
     else if(type=='group'){
-        if(!name || !startApp || !endApp || !startHold || !endHold || !rewards || !rules || !publish || !isEqual || !limit){
-            ctx.body={
-                code:-2,
-                data:{
-                    message:'信息请填写完整'
-                }
-            }
-        }
-        else if(publish=='yes'){
+        if(publish=='yes'){
             let Select={'name':name,'type':type,'isEqual':isEqual,'limit':limit,'startApp':startApp,'endApp':endApp,'startHold':startHold,'endHold':endHold,'rules':rules,'rewards':rewards,'state':'published'}
             if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
                 code:0,
                 data:{
-                    message:'新建成功'
+                    message:'新建成功,发布成功'
                 }
             }
         }
@@ -80,15 +65,15 @@ const newContest=async (ctx,next)=>{
             if(remark) Select['remark']=remark
             await contest.create(Select)
             ctx.body={
-                code:0,
+                code:1,
                 data:{
-                    message:'新建成功'
+                    message:'新建成功,存为草稿'
                 }
             }
         }
         else{
             ctx.body={
-                code:-5,
+                code:2,
                 data:{
                     message:'新建失败'
                 }
@@ -97,7 +82,7 @@ const newContest=async (ctx,next)=>{
     }
     else{
         ctx.body={
-            code:-3,
+            code:2,
             data:{
                 message:'新建失败'
             }
@@ -107,16 +92,17 @@ const newContest=async (ctx,next)=>{
 }
 
 const showContest=async (ctx,next)=>{
-    const {ContestName,state,type}=ctx.request.query
-    Select={}
-    if(ContestName) Select['ContestName']=ContestName
+    const {contestName,state,type}=ctx.request.body
+    var Select={}
+    if(contestName) Select['name']={[Op.like]:'%'+contestName+'%'}
     if(state) Select['state']=state
     if(type) Select['type']=type
-    const result=await contest.findAll({attributes:['cid','name','type','startApp','endApp','startHold','endHold','state']},{where:Select})
-    if(result){
+    console.log(Select)
+    const data=await contest.findAll({attributes:['cid','name','type','startApp','endApp','startHold','endHold','state'],where:Select})
+    if(data.length!=0){
         ctx.body={
             code:0,
-            result
+            data
         }
     }
     else{

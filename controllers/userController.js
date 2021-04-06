@@ -144,7 +144,7 @@ const login=async (ctx,next)=>{
                     code:0,
                     data:{
                         message:'登录成功',
-                        token:jwt.sign({uid:user.uid,status:status},secret,{expiresIn:'4h'})
+                        token:jwt.sign({uid:user.uid,email:email,password:password,status:status},secret,{expiresIn:'4h'})
                     }
                 }
             }
@@ -223,7 +223,7 @@ const updateInfo=async (ctx,next)=>{
     if(zipCode) Select['zipCode']=zipCode
     if(qq) Select['qq']=qq
     if(weChat) Select['weChat']=weChat
-
+    //console.log(Select)
     try{
         await User.update(Select,{where:{uid:uid}})
         ctx.body={
