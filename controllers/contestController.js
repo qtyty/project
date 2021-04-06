@@ -1,7 +1,6 @@
 const { sequelize } = require('../util/init')
 const {contest}=require('../util/model/contest')
 const jwt = require('jsonwebtoken')
-const { Sequelize } = require('sequelize/types')
 const secret='secret'
 
 const newContest=async (ctx,next)=>{
