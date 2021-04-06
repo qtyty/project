@@ -92,12 +92,12 @@ const newContest=async (ctx,next)=>{
 }
 
 const showContest=async (ctx,next)=>{
-    const {contestName,state,type}=ctx.request.body
+    const {contestName,state,type}=ctx.request.query
     var Select={}
     if(contestName) Select['name']={[Op.like]:'%'+contestName+'%'}
     if(state) Select['state']=state
     if(type) Select['type']=type
-    console.log(Select)
+    //console.log(Select)
     const data=await contest.findAll({attributes:['cid','name','type','startApp','endApp','startHold','endHold','state'],where:Select})
     if(data.length!=0){
         ctx.body={
