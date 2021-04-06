@@ -130,13 +130,14 @@ const login=async (ctx,next)=>{
         }
     }
     else{
-        const user=await User.findOne({attributes: ['uid','email', 'password','status']},{where:{email:email}})
+        const user=await User.findOne({attributes: ['uid','email', 'password','status'],where:{email:email}})
         if(!user){
             ctx.body={
                 code:-1,
                 message:'用户未注册'
             }
         }
+        else{
         if(email==user.email && password==user.password){
             if(status==user.status){
                 ctx.body={
@@ -144,7 +145,7 @@ const login=async (ctx,next)=>{
                     data:{
                         message:'登录成功',
                         token:jwt.sign({uid:user.uid,status:status},secret,{expiresIn:'4h'})
-                    },
+                    }
                 }
             }
             else{
@@ -161,6 +162,7 @@ const login=async (ctx,next)=>{
             }
         }
     }
+}
 }
 
 const logout=async (ctx,next)=>{
@@ -208,7 +210,7 @@ const updateInfo=async (ctx,next)=>{
     const uid=emailtoken['uid']
     let Select={}
     if(chineseName) Select['chineseName']=chineseName
-    if(englishName) Select['english']=englishName
+    if(englishName) Select['englishName']=englishName
     if(sex) Select['sex']=sex
     if(school) Select['school']=school
     if(year) Select['year']=year

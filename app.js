@@ -16,7 +16,7 @@ app.use((ctx,next)=>{
          ctx.status = 401;
          ctx.body = {
              ok: false,
-             msg: err.originalError ? err.originalError.message : err.message
+             message: err.originalError ? err.originalError.message : err.message
          }
      } else {
          throw err;
