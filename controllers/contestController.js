@@ -3,7 +3,8 @@ const {contest}=require('../util/model/contest')
 const jwt = require('jsonwebtoken')
 const secret='secret'
 const Sequelize = require('sequelize');
-const Op = Sequelize.Op;
+const Op = Sequelize.Op
+const moment=require('moment')
 const newContest=async (ctx,next)=>{
     const {name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
     const ContestName=await contest.findOne({where:{name:name}})
@@ -98,7 +99,20 @@ const showContest=async (ctx,next)=>{
     if(state) Select['state']=state
     if(type) Select['type']=type
     //console.log(Select)
-    const data=await contest.findAll({attributes:['cid','name','type','startApp','endApp','startHold','endHold','state'],where:Select})
+    const data=await contest.findAll({where:Select,attributes:['name','type',
+    [Sequelize.fn('date_format',Sequelize.col('startApp'),'%Y-%m-%d'),'startApp'],
+    [Sequelize.fn('date_format',Sequelize.col('endApp'),'%Y-%m-%d'),'endApp'],
+    [Sequelize.fn('date_format',Sequelize.col('startHold'),'%Y-%m-%d'),'startHold'],
+    [Sequelize.fn('date_format',Sequelize.col('endHold'),'%Y-%m-%d'),'endHold'],
+    'state'
+]})
+    for(let x of data){
+        if(x.state=='ready') x.state='未上线'
+        else if(x.state=='published') x.state='已发布'
+        else if(x.state=='finished') x.state='已结束'
+        if(x.type=='single') x.type='单人赛'
+        else if(x.type=='group') x.type='团队赛'
+    }
     if(data.length!=0){
         ctx.body={
             code:0,
@@ -116,10 +130,11 @@ const showContest=async (ctx,next)=>{
 }
 
 const updateContest=async (ctx,next)=>{
-    const {cid,name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
-    const result=await contest.findOne({where:{cid:cid}})
+    const {id,name,type,isEqual,limit,startApp,endApp,startHold,endHold,rules,rewards,remark,publish}=ctx.request.body
+    const result=await contest.findOne({where:{cid:id}})
     let Select={}
     if(name) Select['name']=name
+    /*
     if(type){
         if(type=='single') {Select['type']=type}
         else if(type=='group'){
@@ -128,20 +143,24 @@ const updateContest=async (ctx,next)=>{
             if(limit) Select['limit']=limit
         }
     }
-    if(cid.type=='group'){
-        if(isEqual) Select['isEqual']=isEqual
-        if(limit) Select['limit']=limit
-    }
+    */
+    if(type) Select['type']=type
+    if(isEqual) Select['isEqual']=isEqual
+    if(limit) Select['limit']=limit
     if(startApp) Select['startApp']=startApp
     if(endApp) Select['endApp']=endApp
     if(startHold) Select['startHold']=startHold
     if(endHold) Select['endHold']=endHold
     if(rules) Select['rewards']=rewards
     if(remark) Select['remark']=remark
-    if(publish) Select['publish']=publish
+    if(rewards) Select['rewards']=rewards
+    if(publish){
+        if(publish=='yes') Select['state']='published'
+        else if(publish=='no') Select['state']='ready'
+    }
 
     try{
-        await contest.update(Select,{where:{cid:cid}})
+        await contest.update(Select,{where:{cid:id}})
         ctx.body={
             code:0,
             data:{
@@ -183,10 +202,40 @@ const deleteContest=async (ctx,next)=>{
     }
 }
 
+const showContestInfo=async (ctx,next)=>{
+    const {id}=ctx.request.query
+    let data=await contest.findOne({where:{cid:id},attributes:['name','type','isEqual','limit',
+    [Sequelize.fn('date_format',Sequelize.col('startApp'),'%Y-%m-%d'),'startApp'],
+    [Sequelize.fn('date_format',Sequelize.col('endApp'),'%Y-%m-%d'),'endApp'],
+    [Sequelize.fn('date_format',Sequelize.col('startHold'),'%Y-%m-%d'),'startHold'],
+    [Sequelize.fn('date_format',Sequelize.col('endHold'),'%Y-%m-%d'),'endHold'],
+    'rules','rewards','remark','state'
+]})
+    if(data.state=='ready') data.state='未上线'
+    else if(data.state=='published') data.state='已发布'
+    else if(data.state=='finished') data.state='已结束'
+    if(data.type=='single') {
+        data.type='单人赛'
+        data.isEqual=undefined
+        data.limit= undefined
+        ctx.body={
+            code:0,
+            data
+        }
+    }
+    else if(data.type=='group'){
+        data.type='团队赛'
+        ctx.body={
+            code:0,
+            data
+        }
+    }
+}
 
 module.exports={
     newContest,
     showContest,
     updateContest,
-    deleteContest
+    deleteContest,
+    showContestInfo
 }

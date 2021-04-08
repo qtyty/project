@@ -36,10 +36,19 @@ router.get('/user/logout',user.logout)
 router.get('/user/showInfo',user.showInfo)
 router.post('/user/updateInfo',user.updateInfo)
 router.get('/user/showUniversity',user.showUniversity)
+router.post('/user/teacher/TeacherNewUniversity',user.TeacherNewUniversity)
+
 router.post('/user/newContest',contest.newContest)
 router.get('/user/showContest',contest.showContest)
 router.post('/user/updateContest',contest.updateContest)
 router.post('/user/deleteContest',contest.deleteContest)
+router.get('/user/showContestInfo',contest.showContestInfo)
+
+router.get('/user/manager/showUniversityInfo',user.showUniversityInfo)
+router.post('/user/manager/addUniversity',user.addUniversity)
+router.post('/user/manager/updateUniversity',user.updateUniversity)
+router.post('/user/manager/deleteUniversity',user.deleteUniversity)
+
 
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({

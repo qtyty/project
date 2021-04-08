@@ -244,7 +244,6 @@ const updateInfo=async (ctx,next)=>{
 
 }
 
-
 const showUniversity=async (ctx,next)=>{
     const data=await University.findAll({attributes: ['id','name']})
     //console.log(JSON.stringify(data))
@@ -254,6 +253,151 @@ const showUniversity=async (ctx,next)=>{
     }
 }
 
+const TeacherNewUniversity=async (ctx,next)=>{
+    const {name,address}=ctx.request.body
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const user=await User.findOne({where:{uid:token.uid},attributes:['uid','chineseName','email','phone']})
+    if(!name || !address){
+        ctx.body={
+            code:1,
+            data:{
+                message:'信息请填写完整'
+            }
+        }
+    }
+    else{
+        const res=await University.findOne({where:{name:name}})
+        if(res){
+            ctx.body={
+                code:2,
+                data:{
+                    message:'学校已存在'
+                }
+            }
+        }
+        else{
+            let Select={'chat':user.email,'name':name,'address':address}
+            if(user.chineseName) Select['charge']=user.chineseName
+            try{
+                await University.create(Select)
+                ctx.body={
+                    code:0,
+                    data:{
+                        message:'新增学校成功'
+                    }
+                }
+            }catch(e){
+                console.log(e)
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'新增学校失败'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+const showUniversityInfo=async (ctx,next)=>{
+    const data=await University.findAll({attributes: ['id','name','charge','address']})
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+const addUniversity=async (ctx,next)=>{
+    const {name,address,charge}=ctx.request.body
+    if(!name || !address || !charge){
+        ctx.body={
+            code:1,
+            data:{
+                message:'信息请填写完整'
+            }
+        }
+    }
+    else{
+        const result=await University.findOne({where:{name:name}})
+        if(result){
+            ctx.body={
+                code:2,
+                data:{
+                    message:'学校已存在'
+                }
+            }
+        }
+        else{
+            try{
+                await University.create({name:name,address:address,charge:charge})
+                ctx.body={
+                    code:0,
+                    data:{
+                        message:'新增学校成功'
+                    }
+                }
+            }catch(e){
+                console.log(e)
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'新增学校失败'
+                    }
+                }
+            }
+        }
+    }
+}
+
+const updateUniversity=async (ctx,next)=>{
+    const {id,name,address,charge}=ctx.request.body
+    let Select={}
+    if(name) Select['name']=name
+    if(address) Select['address']=address
+    if(charge) Select['charge']=charge
+    try{
+        await University.update(Select,{where:{id:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:'修改成功'
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'修改失败'
+            }
+        }
+    }
+}
+
+const deleteUniversity=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    //for(let x of id){
+        try{
+            await University.destroy({where:{id:id}})
+            ctx.body={
+                code:0,
+                data:{
+                    message:'删除成功'
+                }
+            }
+        }catch(e){
+            console.log(e)
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'删除失败'
+                }
+            }
+        }
+    }
+//}
 
 module.exports={
     sendCode,
@@ -262,5 +406,10 @@ module.exports={
     showInfo,
     updateInfo,
     logout,
-    showUniversity
+    TeacherNewUniversity,
+    showUniversity,
+    showUniversityInfo,
+    addUniversity,
+    updateUniversity,
+    deleteUniversity
 }
