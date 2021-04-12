@@ -4,6 +4,8 @@ const userEmail = '2253353503@qq.com'
 const random=require('string-random')
 const jwt = require('jsonwebtoken')
 const secret='secret'
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
   port: 465,
@@ -302,7 +304,10 @@ const TeacherNewUniversity=async (ctx,next)=>{
 
 
 const showUniversityInfo=async (ctx,next)=>{
-    const data=await University.findAll({attributes: ['id','name','charge','address']})
+    const {name}=ctx.request.query
+    let Select={}
+    if(name) Select['name']={[Op.like]:'%'+name+'%'}
+    const data=await University.findAll({attributes: ['id','name','charge','address'],where:Select})
     ctx.body={
         code:0,
         data

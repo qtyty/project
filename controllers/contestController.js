@@ -99,7 +99,7 @@ const showContest=async (ctx,next)=>{
     if(state) Select['state']=state
     if(type) Select['type']=type
     //console.log(Select)
-    const data=await contest.findAll({where:Select,attributes:['name','type',
+    const data=await contest.findAll({where:Select,attributes:['cid','name','type',
     [Sequelize.fn('date_format',Sequelize.col('startApp'),'%Y-%m-%d'),'startApp'],
     [Sequelize.fn('date_format',Sequelize.col('endApp'),'%Y-%m-%d'),'endApp'],
     [Sequelize.fn('date_format',Sequelize.col('startHold'),'%Y-%m-%d'),'startHold'],
@@ -110,7 +110,7 @@ const showContest=async (ctx,next)=>{
         if(x.state=='ready') x.state='未上线'
         else if(x.state=='published') x.state='已发布'
         else if(x.state=='finished') x.state='已结束'
-        if(x.type=='single') x.type='单人赛'
+        if(x.type=='single') x.type='个人赛'
         else if(x.type=='group') x.type='团队赛'
     }
     if(data.length!=0){
@@ -215,7 +215,7 @@ const showContestInfo=async (ctx,next)=>{
     else if(data.state=='published') data.state='已发布'
     else if(data.state=='finished') data.state='已结束'
     if(data.type=='single') {
-        data.type='单人赛'
+        data.type='个人赛'
         data.isEqual=undefined
         data.limit= undefined
         ctx.body={

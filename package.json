@@ -27,6 +27,7 @@
     "nodemon": "^2.0.7",
     "seedrandom": "^3.0.5",
     "sequelize": "^6.6.2",
+    "silly-datetime": "^0.1.2",
     "string-random": "^0.1.3"
   }
 }

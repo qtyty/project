@@ -21,7 +21,8 @@ const User=sequelize.define('User',{
     weChat:{type:Sequelize.STRING},
     status:{type:Sequelize.STRING}
 },{
-    timestamps: false
+    timestamps: false,
+    freezeTableName: true
   })
 
 const Email=sequelize.define('Email',{
@@ -29,8 +30,9 @@ const Email=sequelize.define('Email',{
     code:{type:Sequelize.STRING,allowNULL:false},
     createtime:{type:Sequelize.STRING,allowNULL:false}
 },{
-    timestamps: false
-  })
+    timestamps: false,
+    freezeTableName: true
+})
 
 const University=sequelize.define('University',{
     id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
@@ -39,7 +41,8 @@ const University=sequelize.define('University',{
     chat:{type:Sequelize.STRING},
     address:{type:Sequelize.STRING}
 },{
-    timestamps: false
+    timestamps: false,
+    freezeTableName: true
   })
 
 

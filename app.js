@@ -28,6 +28,8 @@ app.use(cors())
 
 const user=require('./controllers/userController')
 const contest=require('./controllers/contestController')
+const apply=require('./controllers/applyController')
+
 router.get('/',ctx=>{ctx.body='hello'})
 router.post('/user/sendCode',user.sendCode)
 router.post('/user/register',user.register)
@@ -50,14 +52,22 @@ router.post('/user/manager/updateUniversity',user.updateUniversity)
 router.post('/user/manager/deleteUniversity',user.deleteUniversity)
 
 
+router.get('/visitor/showContest',apply.showContest)
+router.post('/user/applySingle',apply.singleApply)
+router.post('/user/cancelSingle',apply.cancelSingle)
+router.get('/user/showSingle',apply.showSingle)
+
+
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({
    path:[
       /^\/user\/sendCode/,
       /^\/user\/register/,
-      /^\/user\/login/
+      /^\/user\/login/,
+      /^\/visitor\/showContest/,
    ]
 }))
+
 app.use(router.routes())
 app.use(router.allowedMethods())
 

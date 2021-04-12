@@ -16,7 +16,8 @@ const contest=sequelize.define('Contest',{
     state:{type:Sequelize.STRING},
     address:{type:Sequelize.STRING}
 },{
-    timestamps: false
+    timestamps: false,
+    freezeTableName: true
   })
 
 //sequelize.sync({force:true}).then(()=>{console.log('模型同步')})
