@@ -11,7 +11,7 @@ const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
 const {User,Email,University} = require('../util/model/User')
 
 const showContest=async (ctx,next)=>{
-    const data=await contest.findAll({attributes:['cid','name',
+    const data=await contest.findAll({attributes:['cid','name','type',
     [Sequelize.fn('date_format',Sequelize.col('startApp'),'%Y-%m-%d'),'startApp'],
     [Sequelize.fn('date_format',Sequelize.col('endApp'),'%Y-%m-%d'),'endApp'],
     [Sequelize.fn('date_format',Sequelize.col('startHold'),'%Y-%m-%d'),'startHold'],
@@ -25,6 +25,8 @@ const showContest=async (ctx,next)=>{
         else{
             x.remark=undefined
         }
+        if(x.type=='single') x.type='个人赛'
+        else if(x.type=='group') x.type='团队赛'
     }
     ctx.body={
         code:0,
@@ -102,7 +104,7 @@ const cancelSingle=async (ctx,next)=>{
 const showSingle=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const data=await sequelize.query('select contests.cid,contests.name from contests where cid in (select cid from applySingles where uid= :uid)', {
+    const data=await sequelize.query('select contest.cid,contest.name from contest where cid in (select cid from applySingle where uid= :uid)', {
         replacements:{uid:uid},
         type: QueryTypes.SELECT
       })
