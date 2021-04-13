@@ -54,14 +54,14 @@ router.post('/user/manager/deleteUniversity',user.deleteUniversity)
 
 router.get('/visitor/showContest',apply.showContest)
 router.post('/user/applySingle',apply.singleApply)
-router.post('/user/cancelSingle',apply.cancelSingle)
+router.post('/user/cancelContest',apply.cancelContest)
 router.get('/user/showSingle',apply.showSingle)
 
 
 router.get('/user/showTeacher',apply.showTeacher)
 router.post('/user/applyGroup',apply.groupApply)
 router.get('/user/showGroup',apply.showGroup)
-
+router.post('/user/updateGroup',apply.updateGroup)
 
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({
@@ -70,6 +70,7 @@ app.use(jwtKoa({secret:secret}).unless({
       /^\/user\/register/,
       /^\/user\/login/,
       /^\/visitor\/showContest/,
+      /^\/user\/showContestInfo/
    ]
 }))
 

@@ -79,7 +79,7 @@ const singleApply=async (ctx,next)=>{
 }
 
 
-const cancelSingle=async (ctx,next)=>{
+const cancelContest=async (ctx,next)=>{
     const {cid}=ctx.request.body
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
@@ -178,7 +178,7 @@ const showGroup=async (ctx,next)=>{
     for(x of gid){
         Gid.push(x.gid)
     }
-    var data=await sequelize.query('select gid,cid,groupName,tid from applyGroup where gid in (:Gid)', {
+    var data=await sequelize.query('select gid,cid,groupName as gname,tid from applyGroup where gid in (:Gid)', {
         replacements:{Gid:Gid},
         type: QueryTypes.SELECT
       })
@@ -188,7 +188,7 @@ const showGroup=async (ctx,next)=>{
             replacements:{cid:x.cid},
             type: QueryTypes.SELECT
           })
-        console.log(name)
+        //console.log(name)
         x['cname']=name[0].name
         const tname=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
         x['tname']=tname.chineseName
@@ -202,6 +202,61 @@ const showGroup=async (ctx,next)=>{
     ctx.body={
         code:0,
         data
+    }
+}
+
+const updateGroup=async (ctx,next)=>{
+    const {cid,gname,tid,members}=ctx.request.body
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    const user=await sequelize.query('select applyGroup.gid from applyGroup,groupTeam where applyGroup.cid= :cid and groupTeam.uid=:uid and applyGroup.gid=groupTeam.gid',{
+        replacements:{cid:cid,uid:uid},
+        type:QueryTypes.SELECT
+    })
+    let Select={}
+    if(gname) Select['groupName']=gname
+    if(tid) Select['tid']=tid
+    const gid=user[0].gid
+    try{
+        await applyGroup.update(Select,{where:{gid:gid}})
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'修改失败'
+            }
+        }
+    }
+    if(members){
+        await groupTeam.destroy({where:{gid:gid}})
+        try{
+            for(x of members){
+                const user=await User.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
+                await groupTeam.create({gid:gid,uid:user.uid})
+            }
+            ctx.body={
+                code:0,
+                data:{
+                    message:'修改成功'
+                }
+            }
+        }catch(e){
+            console.log(e)
+            ctx.body={
+                code:-2,
+                data:{
+                    message:'成员修改失败'
+                }
+            }
+        }
+    }else{
+        ctx.body={
+            code:0,
+            data:{
+                message:'修改成功'
+            }
+        }
     }
 }
 
@@ -220,9 +275,10 @@ const showTeacher=async (ctx,next)=>{
 module.exports={
     showContest,
     singleApply,
-    cancelSingle,
+    cancelContest,
     showSingle,
     groupApply,
     showTeacher,
-    showGroup
+    showGroup,
+    updateGroup
 }
