@@ -151,7 +151,7 @@ const updateContest=async (ctx,next)=>{
     if(endApp) Select['endApp']=endApp
     if(startHold) Select['startHold']=startHold
     if(endHold) Select['endHold']=endHold
-    if(rules) Select['rewards']=rewards
+    if(rules) Select['rules']=rules
     if(remark) Select['remark']=remark
     if(rewards) Select['rewards']=rewards
     if(publish){
