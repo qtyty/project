@@ -58,6 +58,8 @@ router.post('/user/cancelSingle',apply.cancelSingle)
 router.get('/user/showSingle',apply.showSingle)
 
 
+router.post('/user/applyGroup',apply.groupApply)
+
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({
    path:[

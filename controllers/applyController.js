@@ -1,5 +1,5 @@
 const { sequelize } = require('../util/init')
-const {applySingle}=require('../util/model/apply')
+const {applySingle,applyGroup}=require('../util/model/apply')
 const {contest}=require('../util/model/contest')
 const Sequelize = require('sequelize')
 const { QueryTypes } = require('sequelize');
@@ -114,9 +114,30 @@ const showSingle=async (ctx,next)=>{
     }
 }
 
+const groupApply=async (ctx,next)=>{
+    const {cid,groupName,tid,members}=ctx.request.body
+    var array=new Array()
+    for(x of members){
+        var user=await User.findOne({where:{id:x.id,chineseName:x.name}})
+        console.log(user.uid)
+    }
+    let Select={'cid':cid,'groupName':groupName,'tid':tid}
+    console.log(Select)
+}
+
+
+const showTeacher=async (ctx,next)=>{
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    const university=await User.findOne({where:{uid:uid},attributes:['university']})
+   // const data=await User.findAll
+}
+
+
 module.exports={
     showContest,
     singleApply,
     cancelSingle,
     showSingle,
+    groupApply
 }
