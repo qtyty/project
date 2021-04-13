@@ -58,7 +58,10 @@ router.post('/user/cancelSingle',apply.cancelSingle)
 router.get('/user/showSingle',apply.showSingle)
 
 
+router.get('/user/showTeacher',apply.showTeacher)
 router.post('/user/applyGroup',apply.groupApply)
+router.get('/user/showGroup',apply.showGroup)
+
 
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({

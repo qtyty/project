@@ -24,9 +24,10 @@ const applyGroup=sequelize.define('applyGroup',{
 
 
 const groupTeam=sequelize.define('groupTeam',{
-  gid:{type:Sequelize.INTEGER,primaryKey:true},
+  id:{type:Sequelize.Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
+  gid:{type:Sequelize.INTEGER},
   uid:{type:Sequelize.INTEGER},
-  id:{type:Sequelize.INTEGER},
+  sid:{type:Sequelize.INTEGER},
   name:{type:Sequelize.STRING}
 },{
   timestamps: false,
