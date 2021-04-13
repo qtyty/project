@@ -38,7 +38,7 @@ router.get('/user/logout',user.logout)
 router.get('/user/showInfo',user.showInfo)
 router.post('/user/updateInfo',user.updateInfo)
 router.get('/user/showUniversity',user.showUniversity)
-router.post('/user/teacher/TeacherNewUniversity',user.TeacherNewUniversity)
+router.post('/user/teacher/newUniversity',user.TeacherNewUniversity)
 
 router.post('/user/newContest',contest.newContest)
 router.get('/user/showContest',contest.showContest)
