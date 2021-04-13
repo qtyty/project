@@ -189,7 +189,7 @@ const showGroup=async (ctx,next)=>{
             type: QueryTypes.SELECT
           })
         console.log(name)
-        x['name']=name[0].name
+        x['cname']=name[0].name
         const tname=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
         x['tname']=tname.chineseName
         const member=await sequelize.query('select user.id as id,user.chineseName as name from user,groupTeam where (user.uid=groupTeam.uid and groupTeam.gid= :gid)',{
@@ -197,6 +197,7 @@ const showGroup=async (ctx,next)=>{
             type:QueryTypes.SELECT
         })
         x['members']=member
+        x['gid']=undefined
     }
     ctx.body={
         code:0,
