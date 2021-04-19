@@ -46,6 +46,18 @@ const University=sequelize.define('University',{
   })
 
 
+const checkUniversity=sequelize.define('checkUniverisity',{
+    id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
+    name:{type:Sequelize.STRING,unique:true},
+    charge:{type:Sequelize.STRING},
+    chat:{type:Sequelize.STRING},
+    address:{type:Sequelize.STRING},
+    status:{type:Sequelize.STRING}
+},{
+    timestamps: false,
+    freezeTableName: true
+  })
+
 //sequelize.sync({force:true}).then(()=>{console.log('模型同步')})
 sequelize.sync().then(()=>{console.log('模型同步')})
-module.exports={User,Email,University}
+module.exports={User,Email,University,checkUniversity}

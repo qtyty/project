@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const secret='secret'
 const datetime=require('silly-datetime')
 const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-const {User,Email,University} = require('../util/model/User');
+const {User,Email,University,checkUniversity} = require('../util/model/User');
 const cookieParser = require('cookie-parser');
 
 const showContest=async (ctx,next)=>{
@@ -83,6 +83,8 @@ const cancelContest=async (ctx,next)=>{
     const {cid}=ctx.request.body
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
+    const Contest=await contest.findOne({where:{cid:cid},attributes:['cid','type']})
+    if(Contest.type=='single'){
     try{
         await applySingle.destroy({where:{uid:uid,cid:cid}})
         ctx.body={
@@ -97,6 +99,32 @@ const cancelContest=async (ctx,next)=>{
             code:-1,
             data:{
                 message:'取消报名失败'
+            }
+        }
+    }
+    }
+    else if(Contest.type=='group'){
+        try{
+            const gid=await sequelize.query('select a.gid from applyGroup a,groupTeam b where a.gid=b.gid and a.cid=:cid and b.uid=:uid', {
+                replacements:{cid:cid,uid:uid},
+                type: QueryTypes.SELECT
+              })
+            await groupTeam.destroy({where:{gid:gid[0].gid}}).catch((e)=>{console.log(e)})
+            await applyGroup.destroy({where:{gid:gid[0].gid}}).catch((e)=>{console.log(e)})
+            
+            ctx.body={
+                code:0,
+                data:{
+                    message:'成功取消报名'
+                }
+            }
+        }catch(e){
+            console.log(e)
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'取消报名失败'
+                }
             }
         }
     }
@@ -117,14 +145,28 @@ const showSingle=async (ctx,next)=>{
 
 const groupApply=async (ctx,next)=>{
     const {cid,groupName,tid,members}=ctx.request.body
-    let Select=[]
-    try{
-        for(x of members){
-            const user=await User.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
-            Select.push(user.uid)
+    const gname=await applyGroup.findOne({where:{groupName:groupName,cid:cid}})
+    if(gname){
+        ctx.body={
+            code:2,
+            data:{
+                message:'队伍名称已存在'
+            }
         }
-    }catch(e){
-        console.log(e)
+    }
+    else{
+    let Select=[]
+    for(x of members){
+        if(!x.id || !x.name){
+            break
+        }
+        else{
+            const user=await User.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
+            if(user) Select.push(user.uid)
+            else break
+        }
+    }
+    if(Select.length!=members.length){
         ctx.body={
             code:-1,
             data:{
@@ -132,6 +174,7 @@ const groupApply=async (ctx,next)=>{
             }
         }
     }
+    else{
     try{
         await applyGroup.create({cid:cid,groupName:groupName,tid:tid})
     }catch(e){
@@ -166,6 +209,8 @@ const groupApply=async (ctx,next)=>{
         }
     }
 }
+}}
+
 
 const showGroup=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
@@ -271,6 +316,57 @@ const showTeacher=async (ctx,next)=>{
     }
 }
 
+const showContestIng=async (ctx,next)=>{
+    const data=await contest.findAll({attributes:['cid','name',],where:{state:'published', startApp:{[Op.lte]:date},endHold:{[Op.gte]:date}}})
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+const showApply=async (ctx,next)=>{
+    const {id}=ctx.request.query
+    const Contest=await contest.findOne({where:{cid:id},attributes:['cid','type','name']})
+    if(Contest.type=='single'){
+        const user=await applySingle.findAll({where:{cid:id},attributes:['uid','cid']})
+        var Uid=[]
+        for(x of user){
+            console.log(x)
+            Uid.push(x.uid)
+        }
+        //console.log(Uid)
+        const data=await User.findAll({where:{uid:Uid},attributes:['chineseName','sex','year','id','email']})
+        ctx.body={
+            code:0,
+            data
+        }
+    }
+    else if(Contest.type=='group'){
+        var data=await applyGroup.findAll({where:{cid:id},attributes:['gid','cid','groupName','tid']})
+        data=JSON.parse(JSON.stringify(data))
+        for(x of data){
+            const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
+            x['tname']=teacher.chineseName
+            var members=[]
+            var Uid=await groupTeam.findAll({where:{gid:x.gid},attributes:['uid']})
+            Uid=JSON.parse(JSON.stringify(Uid))
+            for(i of Uid){
+                var user=await User.findOne({where:{uid:i.uid},attributes:['chineseName','sex','year','id','email']})
+                user=JSON.parse(JSON.stringify(user))
+                members.push(user)
+            }
+            //console.log(members)
+            x['members']=members
+
+        }
+        ctx.body={
+            code:0,
+            data
+        }
+    }
+}
+
+
 
 module.exports={
     showContest,
@@ -280,5 +376,7 @@ module.exports={
     groupApply,
     showTeacher,
     showGroup,
-    updateGroup
+    updateGroup,
+    showContestIng,
+    showApply
 }

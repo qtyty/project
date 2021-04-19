@@ -51,6 +51,10 @@ router.post('/user/manager/addUniversity',user.addUniversity)
 router.post('/user/manager/updateUniversity',user.updateUniversity)
 router.post('/user/manager/deleteUniversity',user.deleteUniversity)
 
+router.get('/user/manager/school/showCheckUn',user.showCheckUn)
+router.post('/user/manager/school/checkTrue',user.checkTrue)
+router.post('/user/manager/school/checkFalse',user.checkFalse)
+
 
 router.get('/visitor/showContest',apply.showContest)
 router.post('/user/applySingle',apply.singleApply)
@@ -62,6 +66,10 @@ router.get('/user/showTeacher',apply.showTeacher)
 router.post('/user/applyGroup',apply.groupApply)
 router.get('/user/showGroup',apply.showGroup)
 router.post('/user/updateGroup',apply.updateGroup)
+
+router.get('/user/manager/showContestIng',apply.showContestIng)
+router.get('/user/manager/showApply',apply.showApply)
+
 
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({

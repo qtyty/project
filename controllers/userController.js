@@ -1,4 +1,4 @@
-const {User,Email,University} = require('../util/model/User')
+const {User,Email,University,checkUniversity} = require('../util/model/User')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
 const random=require('string-random')
@@ -278,10 +278,11 @@ const TeacherNewUniversity=async (ctx,next)=>{
             }
         }
         else{
-            let Select={'chat':user.email,'name':name,'address':address}
-            if(user.chineseName) Select['charge']=user.chineseName
+            let Select={'name':name,'address':address}
+            //let Select={'chat':user.email,'name':name,'address':address}
+            //if(user.chineseName) Select['charge']=user.chineseName
             try{
-                await University.create(Select)
+                await checkUniversity.create(Select)
                 ctx.body={
                     code:0,
                     data:{
@@ -404,6 +405,60 @@ const deleteUniversity=async (ctx,next)=>{
     }
 //}
 
+const showCheckUn=async (ctx,next)=>{
+    const data=await checkUniversity.findAll({attributes:['id','name','address']})
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+const checkTrue=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        for(x of id){
+            const data=await checkUniversity.findOne({where:{id:x},attributes:['id','name','address']})
+            await University.create({name:data.name,address:data.address})
+            await checkUniversity.destroy({where:{id:x}})
+        }
+        ctx.body={
+            code:0,
+            data:{
+                message:'成功'
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
+
+const checkFalse=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await checkUniversity.destroy({where:{id:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:'成功'
+            }
+        }
+    }catch(e){
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
+
+
 module.exports={
     sendCode,
     register,
@@ -416,5 +471,8 @@ module.exports={
     showUniversityInfo,
     addUniversity,
     updateUniversity,
-    deleteUniversity
+    deleteUniversity,
+    showCheckUn,
+    checkTrue,
+    checkFalse
 }
