@@ -1,4 +1,5 @@
 const {User,Email,University,checkUniversity} = require('../util/model/User')
+const {checkTeacher,checkStudent}=require('../util/model/check')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
 const random=require('string-random')
@@ -210,7 +211,8 @@ const updateInfo=async (ctx,next)=>{
     const {chineseName,englishName,sex,school,year,id,phone,email,country,city,address,zipCode,qq,weChat}=ctx.request.body
     const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=emailtoken['uid']
-    let Select={}
+    const status=emailtoken['status']
+    var Select={}
     if(chineseName) Select['chineseName']=chineseName
     if(englishName) Select['englishName']=englishName
     if(sex) Select['sex']=sex
@@ -226,8 +228,10 @@ const updateInfo=async (ctx,next)=>{
     if(qq) Select['qq']=qq
     if(weChat) Select['weChat']=weChat
     //console.log(Select)
+    if(status=='student'){
     try{
-        await User.update(Select,{where:{uid:uid}})
+        Select['csid']=uid
+        await checkStudent.create(Select)
         ctx.body={
             code:0,
             data:{
@@ -243,7 +247,27 @@ const updateInfo=async (ctx,next)=>{
             }
         }
     }
-
+    }
+    else if(status=='teacher'){
+        try{
+            Select['ctid']=uid
+            await checkTeacher.create(Select)
+            ctx.body={
+                code:0,
+                data:{
+                    message:'修改成功'
+                }
+            }
+        }catch(e){
+            console.log(e)
+            ctx.body={
+                code:1,
+                data:{
+                    message:'修改失败'
+                }
+            }
+        }
+    }
 }
 
 const showUniversity=async (ctx,next)=>{
@@ -458,6 +482,148 @@ const checkFalse=async (ctx,next)=>{
     }
 }
 
+const showCheckTeacher=async (ctx,next)=>{
+    const data=await checkTeacher.findAll({
+        attributes:[['ctid','tid'],'chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat'
+    ]})
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+const checkTeacherTrue=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        for(x of id){
+            const data=await checkTeacher.findOne({where:{ctid:x},attributes:['ctid','chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
+            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
+                        'city':data.city,'address':data.address,'zipCode':data.zipCode,'qq':data.qq,'weChat':data.weChat}
+            await User.update(Select,{where:{uid:data.ctid}})
+            await checkTeacher.destroy({where:{ctid:x}})
+        }
+        ctx.body={
+            code:0,
+            data:{
+                message:'成功'
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
+
+const checkTeacherFalse=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await checkTeacher.destroy({where:{ctid:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:'成功'
+            }
+        }
+    }catch(e){
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
+
+
+const showCheckStudent=async (ctx,next)=>{
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    const teacher=await User.findOne({where:{uid:uid},attributes:['uid','school','status']})
+    const data=await checkStudent.findAll({
+        attributes:[['csid','uid'],'chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat'
+    ],where:{school:teacher.school}})
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+
+const checkStudentTrue=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        for(x of id){
+            const data=await checkStudent.findOne({where:{csid:x},attributes:['uid','chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
+            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
+                        'city':data.city,'address':data.address,'zipCode':data.zipCode,'qq':data.qq,'weChat':data.weChat}
+            await User.update(Select,{where:{uid:data.uid}})
+            await checkStudent.destroy({where:{csid:x}})
+        }
+        ctx.body={
+            code:0,
+            data:{
+                message:'成功'
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
+
+
+const checkStudentFalse=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await checkStudent.destroy({where:{csid:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:'成功'
+            }
+        }
+    }catch(e){
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
+
+
+const showStudent=async (ctx,next)=>{
+    const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=emailtoken['uid']
+    const school=await User.findOne({where:{uid:uid},attributes:['school','uid']})
+    const data=await User.findAll({where:{status:'student',school:school.school}})
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+
+const showTeacher=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    const school=await University.findOne({where:{id:id}})
+    const data=await User.findAll({where:{school:school.name},attributes:[['uid','id'],'chineseName']})
+    ctx.body={
+        code:0,
+        data
+    }
+}
 
 module.exports={
     sendCode,
@@ -474,5 +640,14 @@ module.exports={
     deleteUniversity,
     showCheckUn,
     checkTrue,
-    checkFalse
+    checkFalse,
+    showCheckTeacher,
+    checkTeacherTrue,
+    checkTeacherFalse,
+    showCheckStudent,
+    showCheckStudent,
+    checkStudentTrue,
+    checkStudentFalse,
+    showStudent,
+    showTeacher
 }

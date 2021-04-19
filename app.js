@@ -55,6 +55,16 @@ router.get('/user/manager/school/showCheckUn',user.showCheckUn)
 router.post('/user/manager/school/checkTrue',user.checkTrue)
 router.post('/user/manager/school/checkFalse',user.checkFalse)
 
+router.get('/user/manager/teacher/showCheckTeacher',user.showCheckTeacher)
+router.post('/user/manager/teacher/checkTeacherTrue',user.checkTeacherTrue)
+router.post('/user.manager/teacher/checkTeacherFalse',user.checkTeacherFalse)
+
+router.get('/user/teacher/showCheckStudent',user.showCheckStudent)
+router.post('/user/teacher/checkStudentTrue',user.checkStudentTrue)
+router.post('/user/teacher/checkStudentFalse',user.checkStudentFalse)
+
+router.get('/user/teacher/showStudent',user.showStudent)
+router.get('/user/manager/showTeacher',user.showStudent)
 
 router.get('/visitor/showContest',apply.showContest)
 router.post('/user/applySingle',apply.singleApply)
@@ -69,6 +79,8 @@ router.post('/user/updateGroup',apply.updateGroup)
 
 router.get('/user/manager/showContestIng',apply.showContestIng)
 router.get('/user/manager/showApply',apply.showApply)
+
+
 
 
 app.use(bodyParser())
