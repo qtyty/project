@@ -235,7 +235,7 @@ const updateInfo=async (ctx,next)=>{
         ctx.body={
             code:0,
             data:{
-                message:'修改成功'
+                message:'修改成功,等待审核'
             }
         }
     }catch(e){
