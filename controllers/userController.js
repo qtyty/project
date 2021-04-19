@@ -382,11 +382,11 @@ const addUniversity=async (ctx,next)=>{
 }
 
 const updateUniversity=async (ctx,next)=>{
-    const {id,name,address,charge}=ctx.request.body
+    const {id,name,address,tid}=ctx.request.body
     let Select={}
     if(name) Select['name']=name
     if(address) Select['address']=address
-    if(charge) Select['charge']=charge
+    if(tid) Select['tid']=tid
     try{
         await University.update(Select,{where:{id:id}})
         ctx.body={

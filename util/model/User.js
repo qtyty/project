@@ -37,7 +37,7 @@ const Email=sequelize.define('Email',{
 const University=sequelize.define('University',{
     id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
     name:{type:Sequelize.STRING,unique:true},
-    charge:{type:Sequelize.STRING},
+    tid:{type:Sequelize.INTEGER},
     chat:{type:Sequelize.STRING},
     address:{type:Sequelize.STRING}
 },{
