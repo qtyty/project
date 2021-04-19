@@ -286,7 +286,7 @@ const TeacherNewUniversity=async (ctx,next)=>{
                 ctx.body={
                     code:0,
                     data:{
-                        message:'新增学校成功'
+                        message:'新增学校成功,等待审核'
                     }
                 }
             }catch(e){
