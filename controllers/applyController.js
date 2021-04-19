@@ -335,7 +335,7 @@ const showApply=async (ctx,next)=>{
             Uid.push(x.uid)
         }
         //console.log(Uid)
-        const data=await User.findAll({where:{uid:Uid},attributes:['chineseName','sex','year','id','email']})
+        const data=await User.findAll({where:{uid:Uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
         ctx.body={
             code:0,
             data
@@ -351,7 +351,7 @@ const showApply=async (ctx,next)=>{
             var Uid=await groupTeam.findAll({where:{gid:x.gid},attributes:['uid']})
             Uid=JSON.parse(JSON.stringify(Uid))
             for(i of Uid){
-                var user=await User.findOne({where:{uid:i.uid},attributes:['chineseName','sex','year','id','email']})
+                var user=await User.findOne({where:{uid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
                 user=JSON.parse(JSON.stringify(user))
                 members.push(user)
             }
