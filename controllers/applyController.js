@@ -223,6 +223,7 @@ const showGroup=async (ctx,next)=>{
     for(x of gid){
         Gid.push(x.gid)
     }
+    if(Gid.length>0){
     var data=await sequelize.query('select gid,cid,groupName as gname,tid from applyGroup where gid in (:Gid)', {
         replacements:{Gid:Gid},
         type: QueryTypes.SELECT
@@ -247,6 +248,14 @@ const showGroup=async (ctx,next)=>{
     ctx.body={
         code:0,
         data
+    }
+    }
+    else{
+        ctx.body={
+            code:0,
+            data:[]
+        }
+        
     }
 }
 
