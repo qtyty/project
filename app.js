@@ -57,7 +57,7 @@ router.post('/user/manager/school/checkFalse',user.checkFalse)
 
 router.get('/user/manager/teacher/showCheckTeacher',user.showCheckTeacher)
 router.post('/user/manager/teacher/checkTeacherTrue',user.checkTeacherTrue)
-router.post('/user.manager/teacher/checkTeacherFalse',user.checkTeacherFalse)
+router.post('/user/manager/teacher/checkTeacherFalse',user.checkTeacherFalse)
 
 router.get('/user/teacher/showCheckStudent',user.showCheckStudent)
 router.post('/user/teacher/checkStudentTrue',user.checkStudentTrue)
