@@ -64,7 +64,7 @@ router.post('/user/teacher/checkStudentTrue',user.checkStudentTrue)
 router.post('/user/teacher/checkStudentFalse',user.checkStudentFalse)
 
 router.get('/user/teacher/showStudent',user.showStudent)
-router.get('/user/manager/showTeacher',user.showStudent)
+router.get('/user/manager/showTeacher',user.showTeacher)
 
 router.get('/visitor/showContest',apply.showContest)
 router.post('/user/applySingle',apply.singleApply)

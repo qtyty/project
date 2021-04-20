@@ -255,7 +255,7 @@ const updateInfo=async (ctx,next)=>{
             ctx.body={
                 code:0,
                 data:{
-                    message:'修改成功'
+                    message:'修改成功,等待审核'
                 }
             }
         }catch(e){
@@ -607,7 +607,7 @@ const showStudent=async (ctx,next)=>{
     const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=emailtoken['uid']
     const school=await User.findOne({where:{uid:uid},attributes:['school','uid']})
-    const data=await User.findAll({where:{status:'student',school:school.school}})
+    const data=await User.findAll({where:{status:'student',school:school.school},attributes:{exclude:['uid','status','password']}})
     ctx.body={
         code:0,
         data
@@ -616,14 +616,37 @@ const showStudent=async (ctx,next)=>{
 
 
 const showTeacher=async (ctx,next)=>{
-    const {id}=ctx.request.body
+    const {id}=ctx.request.query
     const school=await University.findOne({where:{id:id}})
-    const data=await User.findAll({where:{school:school.name},attributes:[['uid','id'],'chineseName']})
+    const data=await User.findAll({where:{school:school.name,status:'teacher'},attributes:[['uid','id'],['chineseName','name']]})
     ctx.body={
         code:0,
         data
     }
 }
+/*
+const Isteacher=async (ctx,next)=>{
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    const teacher=await User.findOne({where:{uid:uid},attributes:['uid','school','chineseName']})
+    if(teacher.school){
+        ctx.body={
+            code:0,
+            data:{
+                message:'学校管理员'
+            }
+        }
+    }
+    else{
+        ctx.body={
+            code:0,
+            data:{
+                message:'普通教师'
+            }
+        }
+    }
+}
+*/
 
 module.exports={
     sendCode,
