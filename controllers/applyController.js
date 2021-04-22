@@ -58,6 +58,15 @@ const singleApply=async (ctx,next)=>{
             }
         }
     }else{
+        const user=await applySingle.findOne({where:{uid:uid,cid:cid}})
+        if(user){
+            ctx.body={
+                code:2,
+                data:{
+                    message:'已报名'
+                }
+            }
+        }else{
         try{
             await applySingle.create({uid:uid,cid:cid})
             ctx.body={
@@ -74,6 +83,7 @@ const singleApply=async (ctx,next)=>{
                     message:'报名失败'
                 }
             }
+        }
         }
     }
 }
@@ -362,6 +372,8 @@ const showApply=async (ctx,next)=>{
             for(i of Uid){
                 var user=await User.findOne({where:{uid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
                 user=JSON.parse(JSON.stringify(user))
+                if(user.sex=='male') user.sex='男'
+                else if(user.sex=='female') user.sex='女'
                 members.push(user)
             }
             //console.log(members)

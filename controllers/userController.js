@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 const secret='secret'
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
+var cache=require('memory-cache')
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
   port: 465,
@@ -48,6 +49,7 @@ const sendCode=async (ctx,next)=>{
     }
     try {
         await Email.create({email:email,code:code,createtime:Date.now()})
+        //cache.put(email,code,10*60*1000)
         await transporter.sendMail(mailOptions)
         ctx.body = {
             code: 0,
@@ -56,7 +58,7 @@ const sendCode=async (ctx,next)=>{
             }
         }
       } catch(e) {
-        throw new Error(e)
+        //throw new Error(e)
         ctx.body = {
             code: -1,
             data:{
@@ -78,6 +80,7 @@ const register=async (ctx,next)=>{
             }
         }
     }
+    
     else{
         const mailCode=await Email.findOne({where:{email:email}})
         if(!mailCode){
@@ -121,6 +124,38 @@ const register=async (ctx,next)=>{
             }
         }
     }
+    /*
+    else{
+        Code=cache.get(email)
+        if(!Code){
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'验证码已过期'
+                }
+            }
+        }
+        else{
+            if(Code==code){
+                await User.create({email:email,password:password,status:status})
+                ctx.body={
+                    code:0,
+                    data:{
+                        message:'注册成功',
+                        //token:jwt.sign({uid:uid,status:status},secret,{expiresIn:'4h'})
+                    }
+                }
+            }
+            else{
+                ctx.body={
+                    code:1,
+                    data:{
+                        message:'验证码不正确'
+                    }
+                }
+            }
+        }
+    }*/
 }
 
 const login=async (ctx,next)=>{
@@ -518,9 +553,13 @@ const checkFalse=async (ctx,next)=>{
 }
 
 const showCheckTeacher=async (ctx,next)=>{
-    const data=await checkTeacher.findAll({
-        attributes:[['ctid','tid'],'chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat'
+    var data=await checkTeacher.findAll({
+        attributes:[['ctid','tid'],'chineseName','englishName','sex','school','year','id','phone','email','country','city','address','zipCode','qq','weChat'
     ]})
+    for(x of data){
+        if(x.sex=='male') x.sex='男'
+        else if(x.sex=='female') x.sex='女'
+    }
     ctx.body={
         code:0,
         data
@@ -531,8 +570,8 @@ const checkTeacherTrue=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
         for(x of id){
-            const data=await checkTeacher.findOne({where:{ctid:x},attributes:['uid','chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
-            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
+            const data=await checkTeacher.findOne({where:{ctid:x},attributes:['uid','chineseName','englishName','sex','year','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
+            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'year':data.year,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
                         'city':data.city,'address':data.address,'zipCode':data.zipCode,'qq':data.qq,'weChat':data.weChat}
             await User.update(Select,{where:{uid:data.uid}})
             await checkTeacher.destroy({where:{ctid:x}})
@@ -579,9 +618,13 @@ const showCheckStudent=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
     const teacher=await User.findOne({where:{uid:uid},attributes:['uid','school','status']})
-    const data=await checkStudent.findAll({
-        attributes:[['csid','uid'],'chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat'
+    var data=await checkStudent.findAll({
+        attributes:[['csid','uid'],'chineseName','englishName','sex','school','year','id','phone','email','country','city','address','zipCode','qq','weChat'
     ],where:{school:teacher.school}})
+    for(x of data){
+        if(x.sex=='male') x.sex='男'
+        else if(x.sex=='female') x.sex='女'
+    }
     ctx.body={
         code:0,
         data
@@ -593,8 +636,8 @@ const checkStudentTrue=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
         for(x of id){
-            const data=await checkStudent.findOne({where:{csid:x},attributes:['uid','chineseName','englishName','sex','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
-            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
+            const data=await checkStudent.findOne({where:{csid:x},attributes:['uid','chineseName','englishName','sex','year','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
+            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'year':data.year,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
                         'city':data.city,'address':data.address,'zipCode':data.zipCode,'qq':data.qq,'weChat':data.weChat}
             await User.update(Select,{where:{uid:data.uid}})
             await checkStudent.destroy({where:{csid:x}})
@@ -639,10 +682,14 @@ const checkStudentFalse=async (ctx,next)=>{
 
 
 const showStudent=async (ctx,next)=>{
-    const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
-    const uid=emailtoken['uid']
-    const school=await User.findOne({where:{uid:uid},attributes:['school','uid']})
-    const data=await User.findAll({where:{status:'student',school:school.school},attributes:{exclude:['uid','status','password']}})
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    const sc=await User.findOne({where:{uid:uid},attributes:['school','uid']})
+    let data=await User.findAll({where:{status:'student',school:sc.school},attributes:{exclude:['uid','status','password']}})
+    for(x of data){
+        if(x.sex=='male') x.sex='男'
+        else if(x.sex=='female') x.sex='女'
+    }
     ctx.body={
         code:0,
         data
@@ -659,29 +706,32 @@ const showTeacher=async (ctx,next)=>{
         data
     }
 }
-/*
-const Isteacher=async (ctx,next)=>{
+
+const IsteacherCharge=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const teacher=await User.findOne({where:{uid:uid},attributes:['uid','school','chineseName']})
-    if(teacher.school){
-        ctx.body={
-            code:0,
-            data:{
-                message:'学校管理员'
+    const user=await User.findOne({where:{uid:uid},attributes:['uid','school']})
+    if(user.school!=null){
+        const teacher=await University.findOne({where:{tid:uid}})
+        if(teacher){
+            ctx.body={
+                code:0,
+                message:'教师负责人'
             }
-        }
-    }
-    else{
-        ctx.body={
-            code:0,
-            data:{
+        }else{
+            ctx.body={
+                code:0,
                 message:'普通教师'
             }
         }
+    }else{
+        ctx.body={
+            code:0,
+            message:'普通老师'
+        }
     }
 }
-*/
+
 
 module.exports={
     sendCode,
@@ -707,5 +757,6 @@ module.exports={
     checkStudentTrue,
     checkStudentFalse,
     showStudent,
-    showTeacher
+    showTeacher,
+    IsteacherCharge
 }
