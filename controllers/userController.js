@@ -301,6 +301,10 @@ const updateInfo=async (ctx,next)=>{
     if(status=='student'){
     try{
         Select['uid']=uid
+        if(school){
+            const School=await University.findOne({where:{id:school}})
+            Select['school']=School.name
+        }
         await checkStudent.create(Select)
         ctx.body={
             code:0,
@@ -310,7 +314,7 @@ const updateInfo=async (ctx,next)=>{
         }
     }catch(e){
         console.log(e)
-        ctx.body={
+            ctx.body={
             code:1,
             data:{
                 message:'修改失败'
