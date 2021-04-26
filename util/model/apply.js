@@ -4,7 +4,8 @@ const applySingle=sequelize.define('applySingle',{
     id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
     uid:{type:Sequelize.INTEGER},
     cid:{type:Sequelize.INTEGER},
-    state:{type:Sequelize.STRING}
+    status:{type:Sequelize.INTEGER},
+    remark:{type:Sequelize.STRING}
 },{
     timestamps: false,
     freezeTableName: true
@@ -16,7 +17,8 @@ const applyGroup=sequelize.define('applyGroup',{
     cid:{type:Sequelize.INTEGER},
     tid:{type:Sequelize.INTEGER},
     suid:{type:Sequelize.INTEGER},
-    state:{type:Sequelize.STRING}
+    status:{type:Sequelize.STRING},
+    remark:{type:Sequelize.STRING}
 },{
     timestamps: false,
     freezeTableName: true

@@ -29,6 +29,8 @@ app.use(cors())
 const user=require('./controllers/userController')
 const contest=require('./controllers/contestController')
 const apply=require('./controllers/applyController')
+const test=require('./controllers/testController')
+
 
 router.get('/',ctx=>{ctx.body='hello'})
 router.post('/user/sendCode',user.sendCode)
@@ -81,6 +83,26 @@ router.get('/user/manager/showContestIng',apply.showContestIng)
 router.get('/user/manager/showApply',apply.showApply)
 
 
+router.post('/user/manager/test/addRoom',test.addRoom)
+router.post('/user/manager/test/updateRoom',test.updateRoom)
+router.post('/user/manager/test/deleteRoom',test.deleteRoom)
+router.get('/user/manager/test/showRoom',test.showRoom)
+
+
+router.get('/user/manager/contest/showTotal',apply.countNumber)
+router.post('/user/manager/test/addArrange',test.addArrange)
+router.post('/user/manager/test/updateArrange',test.updateArrange)
+router.post('/user/manager/test/cancelArrange',test.cancelArrange)
+router.get('/user/manager/test/showArrange',test.showArrange)
+router.get('/user/manager/test/availableRoom',test.AvailableRoom)
+
+
+router.get('/user/manager/apply/checkSingle',apply.checkSingle)
+router.get('/user/manager/apply/checkGroup',apply.checkGroup)
+router.post('/user/manager/apply/checkSingleTrue',apply.checkSingleTrue)
+router.post('/user/manager/apply/checkSingleFalse',apply.checkSingleFalse)
+router.post('/user/manager/apply/checkGroupTrue',apply.checkGroupTrue)
+router.post('/user/manager/apply/checkGroupFalse',apply.checkGroupFalse)
 
 
 app.use(bodyParser())

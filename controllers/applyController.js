@@ -58,21 +58,30 @@ const singleApply=async (ctx,next)=>{
             }
         }
     }else{
-        const user=await applySingle.findOne({where:{uid:uid,cid:cid}})
-        if(user){
+        const user=await applySingle.findOne({where:{uid:uid,cid:cid},attributes:['status']})
+        if(user.status==1){
             ctx.body={
                 code:2,
                 data:{
                     message:'已报名'
                 }
             }
-        }else{
+        }
+        else if(user.status==0){
+            ctx.body={
+                code:2,
+                data:{
+                    message:'审核中'
+                }
+            }
+        }
+        else{
         try{
-            await applySingle.create({uid:uid,cid:cid})
+            await applySingle.create({uid:uid,cid:cid,status:0})
             ctx.body={
                 code:0,
                 data:{
-                    message:'报名成功'
+                    message:'报名成功,等待审核'
                 }
             }
         }catch(e){
@@ -143,7 +152,7 @@ const cancelContest=async (ctx,next)=>{
 const showSingle=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const data=await sequelize.query('select contest.cid,contest.name from contest where cid in (select cid from applySingle where uid= :uid)', {
+    const data=await sequelize.query('select contest.cid,contest.name from contest where cid in (select cid from applySingle where uid= :uid and status=1)', {
         replacements:{uid:uid},
         type: QueryTypes.SELECT
       })
@@ -186,7 +195,7 @@ const groupApply=async (ctx,next)=>{
     }
     else{
     try{
-        await applyGroup.create({cid:cid,groupName:groupName,tid:tid})
+        await applyGroup.create({cid:cid,groupName:groupName,tid:tid,status:0})
     }catch(e){
         console.log(e)
         ctx.body={
@@ -234,7 +243,7 @@ const showGroup=async (ctx,next)=>{
         Gid.push(x.gid)
     }
     if(Gid.length>0){
-    var data=await sequelize.query('select gid,cid,groupName as gname,tid from applyGroup where gid in (:Gid)', {
+    var data=await sequelize.query('select gid,cid,groupName as gname,tid from applyGroup where gid in (:Gid) and status=1', {
         replacements:{Gid:Gid},
         type: QueryTypes.SELECT
       })
@@ -347,7 +356,7 @@ const showApply=async (ctx,next)=>{
     const {id}=ctx.request.query
     const Contest=await contest.findOne({where:{cid:id},attributes:['cid','type','name']})
     if(Contest.type=='single'){
-        const user=await applySingle.findAll({where:{cid:id},attributes:['uid','cid']})
+        const user=await applySingle.findAll({where:{cid:id,status:1},attributes:['uid','cid']})
         var Uid=[]
         for(x of user){
             console.log(x)
@@ -361,7 +370,7 @@ const showApply=async (ctx,next)=>{
         }
     }
     else if(Contest.type=='group'){
-        var data=await applyGroup.findAll({where:{cid:id},attributes:['gid','cid','groupName','tid']})
+        var data=await applyGroup.findAll({where:{cid:id,status:1},attributes:['gid','cid','groupName','tid']})
         data=JSON.parse(JSON.stringify(data))
         for(x of data){
             const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
@@ -387,7 +396,165 @@ const showApply=async (ctx,next)=>{
     }
 }
 
+//查询赛事报名总人数
+const countNumber=async (ctx,next)=>{
+    const {cid}=ctx.request.query
+    const Cid=await contest.findOne({where:{cid:cid},attributes:['cid','type']})
+    if(Cid.type=='single'){
+        let count=await applySingle.findAll({where:{cid:cid},attributes:[[Sequelize.fn('count',sequelize.col('uid')),'uidCount']]})
+        count=JSON.parse(JSON.stringify(count))
+        //console.log(count)
+        ctx.body={
+            code:0,
+            data:{
+                total:count[0].uidCount
+            }
+        }
+    }
+    else if(Cid.type=='group'){
+        let count=await applyGroup.findAll({where:{cid:cid},attributes:[[Sequelize.fn('count',sequelize.col('gid')),'gidCount']]})
+        count=JSON.parse(JSON.stringify(count))
+        //console.log(count)
+        ctx.body={
+            code:0,
+            data:{
+                total:count[0].gidCount
+            }
+        }
+    }
+}
 
+const checkSingle=async (ctx,next)=>{
+    let data=await applySingle.findAll({where:{status:0}})
+    data=JSON.parse(JSON.stringify(data))
+    for(x of data){
+        const User=await user.findOne({where:{uid:x.uid},attributes:['chineseName','school','id','year']})
+        U=JSON.parse(JSON.stringify(User))
+        x['name']=U.chineseName
+        x['school']=U.school
+        x['id']=U.id
+        x['year']=U.year
+        const Contest=await contest.findOne({where:{cid:cid},attributes:['name']})
+        C=JSON.parse(JSON.stringify(Contest))
+        x['cname']=C.name
+    }
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+const checkGroup=async (ctx,next)=>{
+    let data=await applyGroup.findAll({where:{status:0},attributes:[['gid','id'],'cid','groupName','tid']})
+    data=JSON.parse(JSON.stringify(data))
+    for(x of data){
+        const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName']})
+        x['tname']=teacher.chineseName
+        var members=[]
+        var Uid=await groupTeam.findAll({where:{gid:x.id},attributes:['uid']})
+        Uid=JSON.parse(JSON.stringify(Uid))
+        for(i of Uid){
+            var user=await User.findOne({where:{uid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
+            user=JSON.parse(JSON.stringify(user))
+            if(user.sex=='male') user.sex='男'
+            else if(user.sex=='female') user.sex='女'
+            members.push(user)
+        }
+            //console.log(members)
+        x['members']=members
+    }
+    ctx.body={
+        code:0,
+        data
+    }
+}
+
+
+const checkSingleTrue=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await applySingle.update({status:1},{where:{id:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:"审核成功"
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:"审核失败"
+            }
+        }
+    }
+}
+
+
+const checkSingleFalse=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await applySingle.update({status:-1},{where:{id:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:"审核成功"
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:"审核失败"
+            }
+        }
+    }
+}
+
+
+const checkGroupTrue=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await applyGroup.update({status:1},{where:{gid:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:"审核成功"
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:"审核失败"
+            }
+        }
+    }
+}
+
+const checkGroupFalse=async (ctx,next)=>{
+    const {id}=ctx.request.body
+    try{
+        await applyGroup.update({status:-1},{where:{gid:id}})
+        ctx.body={
+            code:0,
+            data:{
+                message:"审核成功"
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:"审核失败"
+            }
+        }
+    }
+}
 
 module.exports={
     showContest,
@@ -399,5 +566,12 @@ module.exports={
     showGroup,
     updateGroup,
     showContestIng,
-    showApply
+    showApply,
+    countNumber,
+    checkSingle,
+    checkGroup,
+    checkSingleTrue,
+    checkSingleFalse,
+    checkGroupTrue,
+    checkGroupFalse
 }

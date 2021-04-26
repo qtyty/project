@@ -406,7 +406,12 @@ const showUniversityInfo=async (ctx,next)=>{
     const {name}=ctx.request.query
     let Select={}
     if(name) Select['name']={[Op.like]:'%'+name+'%'}
-    const data=await University.findAll({attributes: ['id','name','charge','address'],where:Select})
+    let data=await University.findAll({attributes: ['id','name','tid','address'],where:Select})
+    for(x of data){
+        const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName']})
+        x['name']=teacher.chineseName
+        x['tid']=undefined
+    }
     ctx.body={
         code:0,
         data
@@ -735,6 +740,7 @@ const IsteacherCharge=async (ctx,next)=>{
         }
     }
 }
+
 
 
 module.exports={
