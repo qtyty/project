@@ -18,7 +18,7 @@ const addRoom=async (ctx,next)=>{
     }
     else{
     try{
-        await room.create({name:name,address:address,number:number})
+        await room.create({name:name,address:address,number:number,status:'0'})
         ctx.body={
             code:0,
             data:{
@@ -85,12 +85,14 @@ const deleteRoom=async (ctx,next)=>{
 }
 
 const showRoom=async (ctx,next)=>{
+    /*
     let data=await room.findAll({attributes:['rid','name','address','number']})
     for(x of data){
         const Is=await arrange.findOne({where:{rid:x.rid}})
         if(Is) x['status']=1
         else x['status']=0
-    }
+    }*/
+    const data=await room.findAll()
     ctx.body={
         code:0,
         data
@@ -102,6 +104,7 @@ const addArrange=async (ctx,next)=>{
     try{
         for(x of data){
             await arrange.create({rid:x.rid,cid:x.cid,num:x.num})
+            await room.update({status:'1'},{where:{rid:x.rid}})
         }
         ctx.body={
             code:0,
@@ -142,10 +145,12 @@ const showArrange=async (ctx,next)=>{
 }
 
 const AvailableRoom=async (ctx,next)=>{
+    /*
     const data=await sequelize.query('select rid,name,address,number from room where rid not in (select rid from arrange)',{
         //replacements:{},
         type:QueryTypes.SELECT
-    })
+    })*/
+    let data=await room.findAll({where:{status:'0'},attributes:['rid','name','address','number']})
     for(x of data){
         x['rName']=x.address+x.name
         x['address']=undefined
@@ -160,6 +165,10 @@ const AvailableRoom=async (ctx,next)=>{
 const cancelArrange=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
+        for(x of id){
+            const Rid=await arrange.findOne({where:{id:x},attributes:['rid']})
+            await room.update({status:'0'},{where:{rid:Rid.rid}})
+        }
         await arrange.destroy({where:{id:id}})
         ctx.body={
             code:0,
@@ -184,9 +193,9 @@ const updateArrange=async (ctx,next)=>{
     let Select={}
     if(rid){
         Select['rid']=rid
-        //const Rid=await arrange.findOne({where:{id:id}})
-        //await room.update({status:0},{where:{rid:Rid.rid}})
-        //await room.update({status:1},{where:{rid:rid}})
+        const Rid=await arrange.findOne({where:{id:id}})
+        await room.update({status:"0"},{where:{rid:Rid.rid}})
+        await room.update({status:"1"},{where:{rid:rid}})
     }
     if(cid) Select['cid']=cid
     if(num) Select['num']=num

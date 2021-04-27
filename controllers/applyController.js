@@ -59,7 +59,7 @@ const singleApply=async (ctx,next)=>{
         }
     }else{
         const user=await applySingle.findOne({where:{uid:uid,cid:cid},attributes:['status']})
-        if(user.status==1){
+        if(user.status=='1'){
             ctx.body={
                 code:2,
                 data:{
@@ -67,7 +67,7 @@ const singleApply=async (ctx,next)=>{
                 }
             }
         }
-        else if(user.status==0){
+        else if(user.status=='0'){
             ctx.body={
                 code:2,
                 data:{
@@ -77,7 +77,7 @@ const singleApply=async (ctx,next)=>{
         }
         else{
         try{
-            await applySingle.create({uid:uid,cid:cid,status:0})
+            await applySingle.create({uid:uid,cid:cid,status:'0'})
             ctx.body={
                 code:0,
                 data:{
@@ -195,7 +195,7 @@ const groupApply=async (ctx,next)=>{
     }
     else{
     try{
-        await applyGroup.create({cid:cid,groupName:groupName,tid:tid,status:0})
+        await applyGroup.create({cid:cid,groupName:groupName,tid:tid,status:'0'})
     }catch(e){
         console.log(e)
         ctx.body={
@@ -356,7 +356,7 @@ const showApply=async (ctx,next)=>{
     const {id}=ctx.request.query
     const Contest=await contest.findOne({where:{cid:id},attributes:['cid','type','name']})
     if(Contest.type=='single'){
-        const user=await applySingle.findAll({where:{cid:id,status:1},attributes:['uid','cid']})
+        const user=await applySingle.findAll({where:{cid:id,status:'1'},attributes:['uid','cid']})
         var Uid=[]
         for(x of user){
             console.log(x)
@@ -370,7 +370,7 @@ const showApply=async (ctx,next)=>{
         }
     }
     else if(Contest.type=='group'){
-        var data=await applyGroup.findAll({where:{cid:id,status:1},attributes:['gid','cid','groupName','tid']})
+        var data=await applyGroup.findAll({where:{cid:id,status:'1'},attributes:['gid','cid','groupName','tid']})
         data=JSON.parse(JSON.stringify(data))
         for(x of data){
             const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
@@ -425,16 +425,16 @@ const countNumber=async (ctx,next)=>{
 }
 
 const checkSingle=async (ctx,next)=>{
-    let data=await applySingle.findAll({where:{status:0}})
+    let data=await applySingle.findAll({where:{status:'0'},attributes:[['id','sid'],'uid','cid']})
     data=JSON.parse(JSON.stringify(data))
     for(x of data){
-        const User=await user.findOne({where:{uid:x.uid},attributes:['chineseName','school','id','year']})
-        U=JSON.parse(JSON.stringify(User))
+        const user=await User.findOne({where:{uid:x.uid},attributes:['chineseName','school','id','year']})
+        U=JSON.parse(JSON.stringify(user))
         x['name']=U.chineseName
         x['school']=U.school
         x['id']=U.id
         x['year']=U.year
-        const Contest=await contest.findOne({where:{cid:cid},attributes:['name']})
+        const Contest=await contest.findOne({where:{cid:x.cid},attributes:['name']})
         C=JSON.parse(JSON.stringify(Contest))
         x['cname']=C.name
     }
@@ -445,7 +445,7 @@ const checkSingle=async (ctx,next)=>{
 }
 
 const checkGroup=async (ctx,next)=>{
-    let data=await applyGroup.findAll({where:{status:0},attributes:[['gid','id'],'cid','groupName','tid']})
+    let data=await applyGroup.findAll({where:{status:'0'},attributes:[['gid','id'],'cid','groupName','tid']})
     data=JSON.parse(JSON.stringify(data))
     for(x of data){
         const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName']})
@@ -473,7 +473,7 @@ const checkGroup=async (ctx,next)=>{
 const checkSingleTrue=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        await applySingle.update({status:1},{where:{id:id}})
+        await applySingle.update({status:'1'},{where:{id:id}})
         ctx.body={
             code:0,
             data:{
@@ -495,7 +495,7 @@ const checkSingleTrue=async (ctx,next)=>{
 const checkSingleFalse=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        await applySingle.update({status:-1},{where:{id:id}})
+        await applySingle.update({status:'-1'},{where:{id:id}})
         ctx.body={
             code:0,
             data:{
@@ -517,7 +517,7 @@ const checkSingleFalse=async (ctx,next)=>{
 const checkGroupTrue=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        await applyGroup.update({status:1},{where:{gid:id}})
+        await applyGroup.update({status:'1'},{where:{gid:id}})
         ctx.body={
             code:0,
             data:{
@@ -538,7 +538,7 @@ const checkGroupTrue=async (ctx,next)=>{
 const checkGroupFalse=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        await applyGroup.update({status:-1},{where:{gid:id}})
+        await applyGroup.update({status:'-1'},{where:{gid:id}})
         ctx.body={
             code:0,
             data:{

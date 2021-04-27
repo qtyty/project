@@ -4,7 +4,7 @@ const applySingle=sequelize.define('applySingle',{
     id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
     uid:{type:Sequelize.INTEGER},
     cid:{type:Sequelize.INTEGER},
-    status:{type:Sequelize.INTEGER},
+    status:{type:Sequelize.ENUM('-1','0','1')},
     remark:{type:Sequelize.STRING}
 },{
     timestamps: false,
@@ -17,7 +17,7 @@ const applyGroup=sequelize.define('applyGroup',{
     cid:{type:Sequelize.INTEGER},
     tid:{type:Sequelize.INTEGER},
     suid:{type:Sequelize.INTEGER},
-    status:{type:Sequelize.STRING},
+    status:{type:Sequelize.ENUM('-1','0','1')},
     remark:{type:Sequelize.STRING}
 },{
     timestamps: false,

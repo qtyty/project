@@ -5,7 +5,7 @@ const room=sequelize.define('room',{
     name:{type:Sequelize.STRING},//考场名
     address:{type:Sequelize.STRING},
     number:{type:Sequelize.INTEGER},
-    status:{type:Sequelize.INTEGER}
+    status:{type:Sequelize.ENUM('0','1')}
 },{
     timestamps: false,
     freezeTableName: true
