@@ -356,7 +356,7 @@ const showApply=async (ctx,next)=>{
     const {id}=ctx.request.query
     const Contest=await contest.findOne({where:{cid:id},attributes:['cid','type','name']})
     if(Contest.type=='single'){
-        let data=await applySingle.findAll({where:{cid:id},attributes:[['id','sid'],'uid','cid','status','remark']})
+        let data=await applySingle.findAll({where:{cid:id},attributes:[['id','sid'],'uid','status','remark']})
         data=JSON.parse(JSON.stringify(data))
         for(x of data){
             const user=await student.findOne({where:{sid:x.uid},attributes:['chineseName','englishName','sex','id','year','phone','email']})
@@ -368,6 +368,7 @@ const showApply=async (ctx,next)=>{
             x['year']=user.year
             x['phone']=user.phone
             x['email']=user.email
+            x['uid']=undefined
         }
         ctx.body={
             code:0,
@@ -375,11 +376,11 @@ const showApply=async (ctx,next)=>{
         }
     }
     else if(Contest.type=='group'){
-        var data=await applyGroup.findAll({where:{cid:id},attributes:[['gid','id'],'cid','groupName','tid','status','remark']})
+        var data=await applyGroup.findAll({where:{cid:id},attributes:['gid','cid','groupName','tid','status','remark']})
         data=JSON.parse(JSON.stringify(data))
         for(x of data){
-            const teacher=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName','uid']})
-            x['tname']=teacher.chineseName
+            const TeacherName=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName','tid']})
+            x['tname']=TeacherName['chineseName']
             var members=[]
             var Uid=await groupTeam.findAll({where:{gid:x.gid},attributes:['uid']})
             Uid=JSON.parse(JSON.stringify(Uid))
@@ -392,6 +393,8 @@ const showApply=async (ctx,next)=>{
             }
             //console.log(members)
             x['members']=members
+            x['cid']=undefined
+            x['tid']=undefined
 
         }
         ctx.body={
