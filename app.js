@@ -97,8 +97,8 @@ router.get('/user/manager/test/showArrange',test.showArrange)
 router.get('/user/manager/test/availableRoom',test.AvailableRoom)
 
 
-router.get('/user/manager/apply/checkSingle',apply.checkSingle)
-router.get('/user/manager/apply/checkGroup',apply.checkGroup)
+//router.get('/user/manager/apply/checkSingle',apply.checkSingle)
+//router.get('/user/manager/apply/checkGroup',apply.checkGroup)
 router.post('/user/manager/apply/checkSingleTrue',apply.checkSingleTrue)
 router.post('/user/manager/apply/checkSingleFalse',apply.checkSingleFalse)
 router.post('/user/manager/apply/checkGroupTrue',apply.checkGroupTrue)

@@ -1,4 +1,4 @@
-const {User,Email,University,checkUniversity} = require('../util/model/User')
+const {User,student,teacher,University,checkUniversity} = require('../util/model/User')
 const {checkTeacher,checkStudent}=require('../util/model/check')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
@@ -8,6 +8,7 @@ const secret='secret'
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 var cache=require('memory-cache')
+const e = require('express')
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
   port: 465,
@@ -48,8 +49,8 @@ const sendCode=async (ctx,next)=>{
         html: '验证码：'+code+'  有效期为10分钟'
     }
     try {
-        await Email.create({email:email,code:code,createtime:Date.now()})
-        //cache.put(email,code,10*60*1000)
+        //await Email.create({email:email,code:code,createtime:Date.now()})
+        cache.put(email,code,10*60*1000)
         await transporter.sendMail(mailOptions)
         ctx.body = {
             code: 0,
@@ -71,6 +72,15 @@ const sendCode=async (ctx,next)=>{
 
 const register=async (ctx,next)=>{
     const {email,code,password,status}=ctx.request.body
+    if(!email || !password || !status){
+        ctx.body={
+            code:2,
+            data:{
+                message:'注册信息填写完整'
+            }
+        }
+    }
+    else{
     const usermail=await User.findOne({where:{email:email}})
     if(usermail){
         ctx.body={
@@ -80,7 +90,7 @@ const register=async (ctx,next)=>{
             }
         }
     }
-    
+    /*
     else{
         const mailCode=await Email.findOne({where:{email:email}})
         if(!mailCode){
@@ -123,9 +133,18 @@ const register=async (ctx,next)=>{
                 }
             }
         }
-    }
-    /*
+    }*/
+    
     else{
+        if(!code){
+            ctx.body={
+                code:3,
+                data:{
+                    message:'请输入验证码'
+                }
+            }
+        }
+        else{
         Code=cache.get(email)
         if(!Code){
             ctx.body={
@@ -155,7 +174,9 @@ const register=async (ctx,next)=>{
                 }
             }
         }
-    }*/
+    }
+    }
+}
 }
 
 const login=async (ctx,next)=>{
@@ -217,26 +238,21 @@ const logout=async (ctx,next)=>{
 
 
 const showInfo=async (ctx,next)=>{
-    const emailtoken=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
-    const email=emailtoken['uid']
-    const result=await User.findOne({where:{uid:email}})
-    ctx.body={
-        code:0,
-        data:{
-            chineseName:result.chineseName,
-            englishName:result.englishName,
-            sex:result.sex,
-            school:result.school,
-            year:result.year,
-            id:result.id,
-            phone:result.phone,
-            email:result.email,
-            country:result.country,
-            city:result.city,
-            address:result.address,
-            zipCode:result.zipCode,
-            qq:result.qq,
-            weChat:result.weChat
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const Uid=token['uid']
+    const Status=token['status']
+    if(Status=='student'){
+        const data=await student.findOne({where:{sid:uid},attributes:{exclude: ['sid']}})
+        ctx.body={
+            code:0,
+            data
+        }
+    }
+    else if(Status=='teacher'){
+        const data=await teacher.findOne({where:{tid:uid},attributes:{exclude: ['sid']}})
+        ctx.body={
+            code:0,
+            data
         }
     }
 }
@@ -251,6 +267,7 @@ const updateInfo=async (ctx,next)=>{
     const status=token['status']
     //console.log(status)
     var Select={}
+    //let userSelect={}
     if(chineseName){
         Select['chineseName']=chineseName
     }
@@ -273,10 +290,14 @@ const updateInfo=async (ctx,next)=>{
     if(id){Select['id']=id}
     else{Select['id']=user.id}
     
-    if(phone){Select['phone']=phone}
+    if(phone){Select['phone']=phone
+             // userSelect['phone']=phone                
+}
     else{Select['phone']=user.phone}
     
-    if(email){Select['email']=email}
+    if(email){Select['email']=email
+              //userSelect['email']=email
+}
     else{Select['email']=user.email}
 
     if(country){Select['country']=country}
@@ -301,10 +322,6 @@ const updateInfo=async (ctx,next)=>{
     if(status=='student'){
     try{
         Select['uid']=uid
-        if(school){
-            const School=await University.findOne({where:{id:school}})
-            Select['school']=School.name
-        }
         await checkStudent.create(Select)
         ctx.body={
             code:0,
@@ -356,7 +373,7 @@ const showUniversity=async (ctx,next)=>{
 const TeacherNewUniversity=async (ctx,next)=>{
     const {name,address}=ctx.request.body
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
-    const user=await User.findOne({where:{uid:token.uid},attributes:['uid','chineseName','email','phone']})
+    //const user=await teacher.findOne({where:{tid:token.uid}})
     if(!name || !address){
         ctx.body={
             code:1,
@@ -408,8 +425,8 @@ const showUniversityInfo=async (ctx,next)=>{
     if(name) Select['name']={[Op.like]:'%'+name+'%'}
     let data=await University.findAll({attributes: ['id','name','tid','address'],where:Select})
     for(x of data){
-        const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName']})
-        x['name']=teacher.chineseName
+        const Teacher=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName']})
+        x['tname']=Teacher.chineseName
         x['tid']=undefined
     }
     ctx.body={
@@ -566,6 +583,8 @@ const showCheckTeacher=async (ctx,next)=>{
         attributes:[['ctid','tid'],'chineseName','englishName','sex','school','year','id','phone','email','country','city','address','zipCode','qq','weChat'
     ]})
     for(x of data){
+        const School=await school.findOne({where:{id:x.school},attributes:['name']})
+        x['school']=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
     }
@@ -580,9 +599,11 @@ const checkTeacherTrue=async (ctx,next)=>{
     try{
         for(x of id){
             const data=await checkTeacher.findOne({where:{ctid:x},attributes:['uid','chineseName','englishName','sex','year','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
-            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'year':data.year,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
+            let Select={'tid':data.uid,'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'school':data.school,'year':data.year,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
                         'city':data.city,'address':data.address,'zipCode':data.zipCode,'qq':data.qq,'weChat':data.weChat}
-            await User.update(Select,{where:{uid:data.uid}})
+            let userSelect={'phone':data.phone,'email':data.email}
+            await teacher.create(Select)
+            await User.update(userSelect,{where:{uid:data.uid}})
             await checkTeacher.destroy({where:{ctid:x}})
         }
         ctx.body={
@@ -631,6 +652,8 @@ const showCheckStudent=async (ctx,next)=>{
         attributes:[['csid','uid'],'chineseName','englishName','sex','school','year','id','phone','email','country','city','address','zipCode','qq','weChat'
     ],where:{school:teacher.school}})
     for(x of data){
+        const School=await school.findOne({where:{id:x.school},attributes:['name']})
+        x['school']=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
     }
@@ -646,9 +669,11 @@ const checkStudentTrue=async (ctx,next)=>{
     try{
         for(x of id){
             const data=await checkStudent.findOne({where:{csid:x},attributes:['uid','chineseName','englishName','sex','year','school','id','phone','email','country','city','address','zipCode','qq','weChat']})
-            let Select={'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'year':data.year,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
+            let Select={'sid':data.uid,'chineseName':data.chineseName,'englishName':data.englishName,'sex':data.sex,'year':data.year,'school':data.school,'id':data.id,'phone':data.phone,'email':data.email,'country':data.country,
                         'city':data.city,'address':data.address,'zipCode':data.zipCode,'qq':data.qq,'weChat':data.weChat}
-            await User.update(Select,{where:{uid:data.uid}})
+            let userSelect={'phone':data.phone,'email':data.email}
+            await student.create(Select)
+            await User.update(userSelect,{where:{uid:data.uid}})
             await checkStudent.destroy({where:{csid:x}})
         }
         ctx.body={
@@ -693,9 +718,11 @@ const checkStudentFalse=async (ctx,next)=>{
 const showStudent=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const sc=await User.findOne({where:{uid:uid},attributes:['school','uid']})
-    let data=await User.findAll({where:{status:'student',school:sc.school},attributes:{exclude:['uid','status','password']}})
+    const sc=await teacher.findOne({where:{tid:uid},attributes:['school','tid']})
+    let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['uid']}})
     for(x of data){
+        const School=await school.findOne({where:{id:sc.school},attributes:['name']})
+        x.school=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
     }
@@ -708,8 +735,8 @@ const showStudent=async (ctx,next)=>{
 
 const showTeacher=async (ctx,next)=>{
     const {id}=ctx.request.query
-    const school=await University.findOne({where:{id:id}})
-    const data=await User.findAll({where:{school:school.name,status:'teacher'},attributes:[['uid','id'],['chineseName','name']]})
+    //const school=await University.findOne({where:{id:id}})
+    const data=await teacher.findAll({where:{school:id},attributes:[['uid','id'],['chineseName','name']]})
     ctx.body={
         code:0,
         data

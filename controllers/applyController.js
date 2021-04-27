@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const secret='secret'
 const datetime=require('silly-datetime')
 const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-const {User,Email,University,checkUniversity} = require('../util/model/User');
+const {User,student,teacher,University,checkUniversity} = require('../util/model/User');
 const cookieParser = require('cookie-parser');
 
 const showContest=async (ctx,next)=>{
@@ -36,8 +36,8 @@ const showContest=async (ctx,next)=>{
 }
 
 async function checkInfo(uid){
-    const user=await User.findOne({where:{uid:uid},attributes:['chineseName','englishName','school']})
-    if(!user.school || (!user.chineseName && !user.englishName)){
+    const user=await student.findOne({where:{sid:uid}})
+    if(!user){
         return true
     }
     else{
@@ -152,7 +152,7 @@ const cancelContest=async (ctx,next)=>{
 const showSingle=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const data=await sequelize.query('select contest.cid,contest.name from contest where cid in (select cid from applySingle where uid= :uid and status=1)', {
+    const data=await sequelize.query('select contest.cid,contest.name from contest where cid in (select cid from applySingle where uid= :uid )', {
         replacements:{uid:uid},
         type: QueryTypes.SELECT
       })
@@ -180,7 +180,7 @@ const groupApply=async (ctx,next)=>{
             break
         }
         else{
-            const user=await User.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
+            const user=await student.findOne({where:{id:x.id,chineseName:x.name},attributes:[['sid','uid']]})
             if(user) Select.push(user.uid)
             else break
         }
@@ -215,7 +215,7 @@ const groupApply=async (ctx,next)=>{
         ctx.body={
             code:0,
             data:{
-                message:'报名成功'
+                message:'报名成功,等待审核'
             }
         }
     }catch(e){
@@ -243,7 +243,7 @@ const showGroup=async (ctx,next)=>{
         Gid.push(x.gid)
     }
     if(Gid.length>0){
-    var data=await sequelize.query('select gid,cid,groupName as gname,tid from applyGroup where gid in (:Gid) and status=1', {
+    var data=await sequelize.query('select gid,cid,groupName as gname,tid from applyGroup where gid in (:Gid)', {
         replacements:{Gid:Gid},
         type: QueryTypes.SELECT
       })
@@ -255,9 +255,9 @@ const showGroup=async (ctx,next)=>{
           })
         //console.log(name)
         x['cname']=name[0].name
-        const tname=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
+        const tname=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName','uid']})
         x['tname']=tname.chineseName
-        const member=await sequelize.query('select user.id as id,user.chineseName as name from user,groupTeam where (user.uid=groupTeam.uid and groupTeam.gid= :gid)',{
+        const member=await sequelize.query('select student.id as id,student.chineseName as name from student,groupTeam where (student.sid=groupTeam.uid and groupTeam.gid= :gid)',{
             replacements:{gid:x.gid},
             type:QueryTypes.SELECT
         })
@@ -305,7 +305,7 @@ const updateGroup=async (ctx,next)=>{
         await groupTeam.destroy({where:{gid:gid}})
         try{
             for(x of members){
-                const user=await User.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
+                const user=await student.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
                 await groupTeam.create({gid:gid,uid:user.uid})
             }
             ctx.body={
@@ -336,8 +336,8 @@ const updateGroup=async (ctx,next)=>{
 const showTeacher=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const school=await User.findOne({where:{uid:uid},attributes:['school']})
-    const data=await User.findAll({where:{school:school.school,status:'teacher'},attributes:[['uid','id'],['chineseName','name']]})
+    const school=await student.findOne({where:{sid:uid},attributes:['school']})
+    const data=await teacher.findAll({where:{school:school.school},attributes:[['tid','id'],['chineseName','name']]})
     ctx.body={
         code:0,
         data
@@ -356,30 +356,35 @@ const showApply=async (ctx,next)=>{
     const {id}=ctx.request.query
     const Contest=await contest.findOne({where:{cid:id},attributes:['cid','type','name']})
     if(Contest.type=='single'){
-        const user=await applySingle.findAll({where:{cid:id,status:'1'},attributes:['uid','cid']})
-        var Uid=[]
-        for(x of user){
-            console.log(x)
-            Uid.push(x.uid)
+        let data=await applySingle.findAll({where:{cid:id},attributes:[['id','sid'],'uid','cid','status','remark']})
+        data=JSON.parse(JSON.stringify(data))
+        for(x of data){
+            const user=await student.findOne({where:{sid:x.uid},attributes:['chineseName','englishName','sex','id','year','phone','email']})
+            x['chineseName']=user.chineseName
+            x['englishName']=user.englishName
+            if(user.sex=='male') x['sex']='男'
+            else if(user.sex=='female') x['sex']='女'
+            x['id']=user.id
+            x['year']=user.year
+            x['phone']=user.phone
+            x['email']=user.email
         }
-        //console.log(Uid)
-        const data=await User.findAll({where:{uid:Uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
         ctx.body={
             code:0,
             data
         }
     }
     else if(Contest.type=='group'){
-        var data=await applyGroup.findAll({where:{cid:id,status:'1'},attributes:['gid','cid','groupName','tid']})
+        var data=await applyGroup.findAll({where:{cid:id},attributes:[['gid','id'],'cid','groupName','tid','status','remark']})
         data=JSON.parse(JSON.stringify(data))
         for(x of data){
-            const teacher=await User.findOne({where:{uid:x.tid},attributes:['chineseName','uid']})
+            const teacher=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName','uid']})
             x['tname']=teacher.chineseName
             var members=[]
             var Uid=await groupTeam.findAll({where:{gid:x.gid},attributes:['uid']})
             Uid=JSON.parse(JSON.stringify(Uid))
             for(i of Uid){
-                var user=await User.findOne({where:{uid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
+                var user=await student.findOne({where:{sid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
                 user=JSON.parse(JSON.stringify(user))
                 if(user.sex=='male') user.sex='男'
                 else if(user.sex=='female') user.sex='女'
@@ -423,12 +428,12 @@ const countNumber=async (ctx,next)=>{
         }
     }
 }
-
+/*
 const checkSingle=async (ctx,next)=>{
     let data=await applySingle.findAll({where:{status:'0'},attributes:[['id','sid'],'uid','cid']})
     data=JSON.parse(JSON.stringify(data))
     for(x of data){
-        const user=await User.findOne({where:{uid:x.uid},attributes:['chineseName','school','id','year']})
+        const user=await student.findOne({where:{uid:x.uid},attributes:['chineseName','school','id','year']})
         U=JSON.parse(JSON.stringify(user))
         x['name']=U.chineseName
         x['school']=U.school
@@ -468,7 +473,7 @@ const checkGroup=async (ctx,next)=>{
         data
     }
 }
-
+*/
 
 const checkSingleTrue=async (ctx,next)=>{
     const {id}=ctx.request.body
@@ -493,9 +498,11 @@ const checkSingleTrue=async (ctx,next)=>{
 
 
 const checkSingleFalse=async (ctx,next)=>{
-    const {id}=ctx.request.body
+    const {data}=ctx.request.body
     try{
-        await applySingle.update({status:'-1'},{where:{id:id}})
+        for(x of data){
+             await applySingle.update({status:'-1',remark:x.remark},{where:{id:x.id}})
+        }
         ctx.body={
             code:0,
             data:{
@@ -536,9 +543,11 @@ const checkGroupTrue=async (ctx,next)=>{
 }
 
 const checkGroupFalse=async (ctx,next)=>{
-    const {id}=ctx.request.body
+    const {data}=ctx.request.body
     try{
-        await applyGroup.update({status:'-1'},{where:{gid:id}})
+        for(x of data){
+            await applyGroup.update({status:'-1',remark:x.remark},{where:{gid:x.id}})
+        }
         ctx.body={
             code:0,
             data:{
@@ -568,8 +577,8 @@ module.exports={
     showContestIng,
     showApply,
     countNumber,
-    checkSingle,
-    checkGroup,
+    //checkSingle,
+    //checkGroup,
     checkSingleTrue,
     checkSingleFalse,
     checkGroupTrue,
