@@ -263,7 +263,6 @@ const updateInfo=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     //console.log(token)
     const uid=token['uid']
-    const user=await User.findOne({where:{uid:uid}})
     const status=token['status']
     //console.log(status)
     var Select={}
@@ -271,52 +270,34 @@ const updateInfo=async (ctx,next)=>{
     if(chineseName){
         Select['chineseName']=chineseName
     }
-    else{
-        Select['chineseName']=user.chineseName
-    }
 
     if(englishName) {Select['englishName']=englishName}
-    else{Select['englishName']=user.englishName}
     
     if(sex){Select['sex']=sex}
-    else{Select['sex']=user.sex}
 
     if(school){Select['school']=school}
-    else{Select['school']=user.school}
     
     if(year){Select['year']=year}
-    else{Select['year']=user.year}
     
     if(id){Select['id']=id}
-    else{Select['id']=user.id}
     
     if(phone){Select['phone']=phone
              // userSelect['phone']=phone                
 }
-    else{Select['phone']=user.phone}
     
     if(email){Select['email']=email
               //userSelect['email']=email
 }
-    else{Select['email']=user.email}
 
     if(country){Select['country']=country}
-    else{Select['country']=user.country}
 
     if(city){Select['city']=city}
-    else{Select['city']=user.city}
-
     if(address){Select['address']=address}
-    else{Select['address']=user.address}
 
     if(zipCode){Select['zipCode']=zipCode}
-    else{Select['zipCode']=user.zipCode}
-
     if(qq){Select['qq']=qq}
-    else{Select['qq']=user.qq}
 
     if(weChat){Select['weChat']=weChat}
-    else{Select['weChat']=user.weChat}
     
     //console.log(Select)
     if(status=='student'){

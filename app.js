@@ -30,7 +30,7 @@ const user=require('./controllers/userController')
 const contest=require('./controllers/contestController')
 const apply=require('./controllers/applyController')
 const test=require('./controllers/testController')
-
+const grade=require('./controllers/gradeController')
 
 router.get('/',ctx=>{ctx.body='hello'})
 router.post('/user/sendCode',user.sendCode)
@@ -104,6 +104,7 @@ router.post('/user/manager/apply/checkSingleFalse',apply.checkSingleFalse)
 router.post('/user/manager/apply/checkGroupTrue',apply.checkGroupTrue)
 router.post('/user/manager/apply/checkGroupFalse',apply.checkGroupFalse)
 
+router.post('/user/manager/showGrade',grade.showGrade)
 
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({
