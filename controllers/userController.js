@@ -310,7 +310,7 @@ const updateInfo=async (ctx,next)=>{
             try{
                 await student.update(Select,{where:{sid:uid}})
                 await User.update({email:email,phone:phone},{where:{uid:uid}})
-                ctx.body={
+z                ctx.body={
                     code:0,
                     data:{
                         message:'修改成功'
