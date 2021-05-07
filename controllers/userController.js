@@ -1,4 +1,4 @@
-const {User,student,teacher,University,checkUniversity,manager} = require('../util/model/User')
+const {User,student,teacher,University,manager} = require('../util/model/User')
 const {checkTeacher,checkStudent}=require('../util/model/check')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
@@ -452,11 +452,11 @@ const TeacherNewUniversity=async (ctx,next)=>{
             }
         }
         else{
-            let Select={'name':name,'address':address}
+            let Select={'name':name,'address':address,status:0}
             //let Select={'chat':user.email,'name':name,'address':address}
             //if(user.chineseName) Select['charge']=user.chineseName
             try{
-                await checkUniversity.create(Select)
+                await University.create(Select)
                 ctx.body={
                     code:0,
                     data:{
@@ -482,12 +482,7 @@ const showUniversityInfo=async (ctx,next)=>{
     const {name}=ctx.request.query
     let Select={}
     if(name) Select['name']={[Op.like]:'%'+name+'%'}
-    let data=await University.findAll({attributes: ['id','name','tid','address'],where:Select})
-    for(x of data){
-        const Teacher=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName']})
-        x['tname']=Teacher.chineseName
-        x['tid']=undefined
-    }
+    let data=await University.findAll({attributes: ['id','name','address','status'],where:Select})
     ctx.body={
         code:0,
         data
@@ -516,7 +511,7 @@ const addUniversity=async (ctx,next)=>{
         }
         else{
             try{
-                await University.create({name:name,address:address})
+                await University.create({name:name,address:address,status:1})
                 ctx.body={
                     code:0,
                     data:{
@@ -537,11 +532,10 @@ const addUniversity=async (ctx,next)=>{
 }
 
 const updateUniversity=async (ctx,next)=>{
-    const {id,name,address,tid}=ctx.request.body
+    const {id,name,address}=ctx.request.body
     let Select={}
     if(name) Select['name']=name
     if(address) Select['address']=address
-    if(tid) Select['tid']=tid
     try{
         await University.update(Select,{where:{id:id}})
         ctx.body={
@@ -595,11 +589,7 @@ const showCheckUn=async (ctx,next)=>{
 const checkTrue=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        for(x of id){
-            const data=await checkUniversity.findOne({where:{id:x},attributes:['id','name','address']})
-            await University.create({name:data.name,address:data.address})
-            await checkUniversity.destroy({where:{id:x}})
-        }
+        await University.update({status:1},{where:{id:id}})
         ctx.body={
             code:0,
             data:{
@@ -620,7 +610,7 @@ const checkTrue=async (ctx,next)=>{
 const checkFalse=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        await checkUniversity.destroy({where:{id:id}})
+        await University.update({status:-1},{where:{id:id}})
         ctx.body={
             code:0,
             data:{

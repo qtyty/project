@@ -92,7 +92,7 @@ const University=sequelize.define('University',{
     freezeTableName: true
   })
 
-
+/*
 const checkUniversity=sequelize.define('checkUniverisity',{
     id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
     name:{type:Sequelize.STRING,unique:true},
@@ -103,7 +103,7 @@ const checkUniversity=sequelize.define('checkUniverisity',{
 },{
     timestamps: false,
     freezeTableName: true
-  })
+  })*/
 
   const manager=sequelize.define('manager',{
     mid:{type:Sequelize.INTEGER,primaryKey:true},
@@ -135,4 +135,4 @@ const checkUniversity=sequelize.define('checkUniverisity',{
 
 //sequelize.sync({force:true}).then(()=>{console.log('模型同步')})
 sequelize.sync().then(()=>{console.log('模型同步')})
-module.exports={User,student,teacher,University,checkUniversity,manager}
+module.exports={User,student,teacher,University,manager}
