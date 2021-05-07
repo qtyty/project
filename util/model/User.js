@@ -29,6 +29,7 @@ const student=sequelize.define('student',{
     zipCode:{type:Sequelize.STRING},
     qq:{type:Sequelize.STRING},
     weChat:{type:Sequelize.STRING},
+    status:{type:Sequelize.INTEGER}
 },{
     timestamps: false,
     freezeTableName: true,
@@ -56,6 +57,7 @@ const teacher=sequelize.define('teacher',{
     zipCode:{type:Sequelize.STRING},
     qq:{type:Sequelize.STRING},
     weChat:{type:Sequelize.STRING},
+    status:{type:Sequelize.INTEGER}
 },{
     timestamps: false,
     freezeTableName: true,
@@ -83,7 +85,8 @@ const University=sequelize.define('University',{
     name:{type:Sequelize.STRING,unique:true},
     tid:{type:Sequelize.INTEGER},
     chat:{type:Sequelize.STRING},
-    address:{type:Sequelize.STRING}
+    address:{type:Sequelize.STRING},
+    status:{type:Sequelize.INTEGER}
 },{
     timestamps: false,
     freezeTableName: true

@@ -1,4 +1,4 @@
-const {User,student,teacher,University,checkUniversity} = require('../util/model/User')
+const {User,student,teacher,University} = require('../util/model/User')
 const {checkTeacher,checkStudent}=require('../util/model/check')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
@@ -239,34 +239,49 @@ const logout=async (ctx,next)=>{
 
 const showInfo=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
-    const Uid=token['uid']
+    const uid=token['uid']
     const Status=token['status']
     if(Status=='student'){
-        const data=await student.findOne({where:{sid:uid},attributes:{exclude: ['sid']}})
-        ctx.body={
-            code:0,
-            data
+        const data=await student.findOne({where:{sid:uid},attributes:{exclude: ['sid','status']}})
+        if(data){
+            ctx.body={
+                code:0,
+                data
+            }
+        }
+        else{
+            const data=await User.findOne({where:{uid:uid},attributes: ['email','phone']})
+            ctx.body={
+                code:0,
+                data
+            }
         }
     }
     else if(Status=='teacher'){
-        const data=await teacher.findOne({where:{tid:uid},attributes:{exclude: ['sid']}})
-        ctx.body={
-            code:0,
-            data
+        const data=await teacher.findOne({where:{tid:uid},attributes:{exclude: ['tid','status']}})
+        if(data){
+            ctx.body={
+                code:0,
+                data
+            }
+        }else{
+            const data=await User.findOne({where:{uid:uid},attributes:['email','phone']})
+            ctx.body={
+                code:0,
+                data
+            }
         }
     }
 }
 
 
+//修改信息:(学校，year，id)都需审核
 const updateInfo=async (ctx,next)=>{
     const {chineseName,englishName,sex,school,year,id,phone,email,country,city,address,zipCode,qq,weChat}=ctx.request.body
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
-    //console.log(token)
     const uid=token['uid']
     const status=token['status']
-    //console.log(status)
     var Select={}
-    //let userSelect={}
     if(chineseName){
         Select['chineseName']=chineseName
     }
@@ -301,6 +316,8 @@ const updateInfo=async (ctx,next)=>{
     
     //console.log(Select)
     if(status=='student'){
+        const User=await student.findOne({where:{sid:uid}})
+
     try{
         Select['uid']=uid
         await checkStudent.create(Select)
