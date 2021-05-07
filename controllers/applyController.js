@@ -279,6 +279,21 @@ const showGroup=async (ctx,next)=>{
     }
 }
 
+
+const studentShowApply=async (ctx,next)=>{
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    let data1=await applySingle.findAll({where:{uid:uid},attributes:['id','cid','status']})
+    for(x of data1){
+        const C=await contest.findOne({where:{cid:x.cid},attributes:['name','type']})
+        x['name']=C.name
+        if(C.name=='single') x['type']='个人赛'
+        else if(C.name=='group') x['type']='团体赛'
+    }
+    
+}
+
+
 const updateGroup=async (ctx,next)=>{
     const {cid,gname,tid,members}=ctx.request.body
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)

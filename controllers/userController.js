@@ -349,7 +349,7 @@ const updateInfo=async (ctx,next)=>{
     }
     else if(status=='teacher'){
         const T=await teacher.findOne({where:{tid:uid}})
-        if(S){
+        if(T){
             try{
                 await teacher.update(Select,{where:{tid:uid}})
                 await User.update({email:email,phone:phone},{where:{uid:uid}})
@@ -421,7 +421,7 @@ const updateInfo=async (ctx,next)=>{
 }
 
 const showUniversity=async (ctx,next)=>{
-    const data=await University.findAll({attributes: ['id','name']})
+    const data=await University.findAll({attributes: ['id','name'],where:{status:1}})
     //console.log(JSON.stringify(data))
     ctx.body={
         code:0,
@@ -631,9 +631,9 @@ const showCheckTeacher=async (ctx,next)=>{
     const {id}=ctx.request.query
     let Select={}
     if(id) Select['school']=id
-    var data=await teacher.findAll(Select)
+    var data=await teacher.findAll({where:Select})
     for(x of data){
-        const School=await school.findOne({where:{id:x.school},attributes:['name']})
+        const School=await University.findOne({where:{id:x.school},attributes:['name']})
         x['school']=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
@@ -689,13 +689,11 @@ const checkTeacherFalse=async (ctx,next)=>{
 const showCheckStudent=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const teacher=await User.findOne({where:{uid:uid},attributes:['uid','school','status']})
-    var data=await checkStudent.findAll({
-        attributes:[['csid','uid'],'chineseName','englishName','sex','school','year','id','phone','email','country','city','address','zipCode','qq','weChat'
-    ],where:{school:teacher.school}})
+    const sc=await teacher.findOne({where:{tid:uid},attributes:['school','tid']})
+    let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['sid']}})
     for(x of data){
-        const School=await school.findOne({where:{id:x.school},attributes:['name']})
-        x['school']=School.name
+        const School=await University.findOne({where:{id:sc.school},attributes:['name']})
+        x.school=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
     }
@@ -755,7 +753,7 @@ const showStudent=async (ctx,next)=>{
     const sc=await teacher.findOne({where:{tid:uid},attributes:['school','tid']})
     let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['sid']}})
     for(x of data){
-        const School=await school.findOne({where:{id:sc.school},attributes:['name']})
+        const School=await University.findOne({where:{id:sc.school},attributes:['name']})
         x.school=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
