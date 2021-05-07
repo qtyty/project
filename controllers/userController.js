@@ -310,7 +310,7 @@ const updateInfo=async (ctx,next)=>{
             try{
                 await student.update(Select,{where:{sid:uid}})
                 await User.update({email:email,phone:phone},{where:{uid:uid}})
-z                ctx.body={
+                ctx.body={
                     code:0,
                     data:{
                         message:'修改成功'
@@ -690,7 +690,7 @@ const showCheckStudent=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
     const sc=await teacher.findOne({where:{tid:uid},attributes:['school','tid']})
-    let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['sid']}})
+    let data=await student.findAll({where:{school:sc.school}})
     for(x of data){
         const School=await University.findOne({where:{id:sc.school},attributes:['name']})
         x.school=School.name
