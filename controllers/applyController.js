@@ -36,7 +36,7 @@ const showContest=async (ctx,next)=>{
 }
 
 async function checkInfo(uid){
-    const user=await student.findOne({where:{sid:uid}})
+    const user=await student.findOne({where:{sid:uid,status:1}})
     if(!user){
         return true
     }
@@ -59,6 +59,7 @@ const singleApply=async (ctx,next)=>{
         }
     }else{
         const user=await applySingle.findOne({where:{uid:uid,cid:cid},attributes:['status']})
+        if(user){
         if(user.status=='1'){
             ctx.body={
                 code:2,
@@ -74,7 +75,7 @@ const singleApply=async (ctx,next)=>{
                     message:'审核中'
                 }
             }
-        }
+        }}
         else{
         try{
             await applySingle.create({uid:uid,cid:cid,status:'0'})
@@ -180,7 +181,7 @@ const groupApply=async (ctx,next)=>{
             break
         }
         else{
-            const user=await student.findOne({where:{id:x.id,chineseName:x.name},attributes:[['sid','uid']]})
+            const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:[['sid','uid']]})
             if(user) Select.push(user.uid)
             else break
         }
@@ -305,7 +306,7 @@ const updateGroup=async (ctx,next)=>{
         await groupTeam.destroy({where:{gid:gid}})
         try{
             for(x of members){
-                const user=await student.findOne({where:{id:x.id,chineseName:x.name},attributes:['uid']})
+                const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:['uid']})
                 await groupTeam.create({gid:gid,uid:user.uid})
             }
             ctx.body={
@@ -336,8 +337,8 @@ const updateGroup=async (ctx,next)=>{
 const showTeacher=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const school=await student.findOne({where:{sid:uid},attributes:['school']})
-    const data=await teacher.findAll({where:{school:school.school},attributes:[['tid','id'],['chineseName','name']]})
+    const school=await student.findOne({where:{sid:uid,status:1},attributes:['school']})
+    const data=await teacher.findAll({where:{school:school.school,status:1},attributes:[['tid','id'],['chineseName','name']]})
     ctx.body={
         code:0,
         data
