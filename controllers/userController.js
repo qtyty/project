@@ -290,6 +290,9 @@ const updateInfo=async (ctx,next)=>{
     const status=token['status']
     //console.log(Select)
     var Select={}
+    var UserSelect={}
+    if(phone) UserSelect['phone']=phone
+    if(email) UserSelect['email']=email
     Select['chineseName']=chineseName
     Select['englishName']=englishName
     Select['sex']=sex
@@ -307,30 +310,53 @@ const updateInfo=async (ctx,next)=>{
     if(status=='student'){
         const S=await student.findOne({where:{sid:uid}})
         if(S){
-            try{
-                await student.update(Select,{where:{sid:uid}})
-                await User.update({email:email,phone:phone},{where:{uid:uid}})
-                ctx.body={
-                    code:0,
-                    data:{
-                        message:'修改成功'
+            if(S.status==1){
+                try{
+                    await student.update(Select,{where:{sid:uid}})
+                    await User.update(UserSelect,{where:{uid:uid}})
+                    ctx.body={
+                        code:0,
+                        data:{
+                            message:'修改成功'
+                        }
                     }
-                }
-        }catch(e){
-            ctx.body={
-                code:-1,
-                data:{
-                    message:'修改失败'
+            }catch(e){
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'修改失败'
+                    }
                 }
             }
         }
+        
+            else {
+                try{
+                    Select['status']=0
+                    await student.update(Select,{where:{sid:uid}})
+                    await User.update(UserSelect,{where:{uid:uid}})
+                    ctx.body={
+                        code:0,
+                        data:{
+                            message:'修改成功,等待审核'
+                        }
+                    }
+            }catch(e){
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'修改失败'
+                    }
+                }
+            }
+            }
     }
     else{
         try{
             Select['sid']=uid
             Select['status']=0
             await student.create(Select)
-            await User.update({email:email,phone:phone},{where:{uid:uid}})
+            await User.update(UserSelect,{where:{uid:uid}})
             ctx.body={
                 code:0,
                 data:{
@@ -350,13 +376,34 @@ const updateInfo=async (ctx,next)=>{
     else if(status=='teacher'){
         const T=await teacher.findOne({where:{tid:uid}})
         if(T){
+            if(T.status==1){
+                try{
+                    await teacher.update(Select,{where:{tid:uid}})
+                    await User.update(UserSelect,{where:{uid:uid}})
+                    ctx.body={
+                        code:0,
+                        data:{
+                            message:'修改成功'
+                        }
+                    }
+            }catch(e){
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'修改失败'
+                    }
+                }
+        }}
+        
+        else{
             try{
+                Select['status']=0
                 await teacher.update(Select,{where:{tid:uid}})
-                await User.update({email:email,phone:phone},{where:{uid:uid}})
+                await User.update(UserSelect,{where:{uid:uid}})
                 ctx.body={
                     code:0,
                     data:{
-                        message:'修改成功'
+                        message:'修改成功,等待审核'
                     }
                 }
         }catch(e){
@@ -367,13 +414,15 @@ const updateInfo=async (ctx,next)=>{
                 }
             }
         }
-    }
+        }
+        }
+    
     else{
         try{
             Select['tid']=uid
             Select['status']=0
             await teacher.create(Select)
-            await User.update({email:email,phone:phone},{where:{uid:uid}})
+            await User.update(UserSelect,{where:{uid:uid}})
             ctx.body={
                 code:0,
                 data:{
