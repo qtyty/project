@@ -51,6 +51,7 @@ const sendCode=async (ctx,next)=>{
     try {
         //await Email.create({email:email,code:code,createtime:Date.now()})
         cache.put(email,code,10*60*1000)
+        console.log('验证码'+code)
         await transporter.sendMail(mailOptions)
         ctx.body = {
             code: 0,
@@ -608,7 +609,13 @@ const deleteUniversity=async (ctx,next)=>{
     const {id}=ctx.request.body
     //for(let x of id){
         try{
-            await University.destroy({where:{id:id}})
+            for(x of id){
+                const S=await student.findAll({where:{school:id},attributes:['sid']})
+                const T=await teacher.findAll({where:{school:id},attributes:['tid']})
+                if(!S && !T){
+                    await University.destroy({where:{id:id}})
+                }
+            }
             ctx.body={
                 code:0,
                 data:{
@@ -659,7 +666,13 @@ const checkTrue=async (ctx,next)=>{
 const checkFalse=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
-        await University.update({status:-1},{where:{id:id}})
+        for(x of id){
+            const S=await student.findAll({where:{school:id},attributes:['sid']})
+            const T=await teacher.findAll({where:{school:id},attributes:['tid']})
+            if(!S && !T){
+                await University.update({status:-1},{where:{id:id}})
+            }
+        }
         ctx.body={
             code:0,
             data:{

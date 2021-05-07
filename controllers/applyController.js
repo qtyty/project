@@ -364,8 +364,9 @@ const updateGroup=async (ctx,next)=>{
 const showTeacher=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const school=await student.findOne({where:{sid:uid,status:1},attributes:['school']})
-    const data=await teacher.findAll({where:{school:school.school,status:1},attributes:[['tid','id'],['chineseName','name']]})
+    const School=await student.findOne({where:{sid:uid,status:1},attributes:['school']})
+    console.log(School.school)
+    const data=await teacher.findAll({where:{school:School.school,status:1},attributes:[['tid','id'],['chineseName','name']]})
     ctx.body={
         code:0,
         data
