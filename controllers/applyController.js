@@ -290,7 +290,19 @@ const studentShowApply=async (ctx,next)=>{
         if(C.name=='single') x['type']='个人赛'
         else if(C.name=='group') x['type']='团体赛'
     }
-    
+    const Gid=await groupTeam.findAll({where:{uid:uid}})
+    let data2=await applyGroup.findAll({where:{gid:Gid.gid},attributes:['cid','status']})
+    for(x of data2){
+        const C=await contest.findOne({where:{cid:x.cid},attributes:['name','type']})
+        x['name']=C.name
+        if(C.name=='single') x['type']='个人赛'
+        else if(C.name=='group') x['type']='团体赛'
+    }
+    const data=data1.concat(b)
+    ctx.body={
+        code:0,
+        data
+    }
 }
 
 
@@ -601,5 +613,6 @@ module.exports={
     checkSingleTrue,
     checkSingleFalse,
     checkGroupTrue,
-    checkGroupFalse
+    checkGroupFalse,
+    studentShowApply
 }

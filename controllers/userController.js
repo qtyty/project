@@ -242,7 +242,7 @@ const showInfo=async (ctx,next)=>{
     const uid=token['uid']
     const Status=token['status']
     if(Status=='student'){
-        const data=await student.findOne({where:{sid:uid},attributes:{exclude: ['sid','status']}})
+        const data=await student.findOne({where:{sid:uid},attributes:{exclude: ['sid']}})
         if(data){
             ctx.body={
                 code:0,
@@ -258,7 +258,7 @@ const showInfo=async (ctx,next)=>{
         }
     }
     else if(Status=='teacher'){
-        const data=await teacher.findOne({where:{tid:uid},attributes:{exclude: ['tid','status']}})
+        const data=await teacher.findOne({where:{tid:uid},attributes:{exclude: ['tid']}})
         if(data){
             ctx.body={
                 code:0,
