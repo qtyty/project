@@ -365,11 +365,19 @@ const showTeacher=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
     const School=await student.findOne({where:{sid:uid,status:1},attributes:['school']})
-    console.log(School.school)
-    const data=await teacher.findAll({where:{school:School.school,status:1},attributes:[['tid','id'],['chineseName','name']]})
-    ctx.body={
-        code:0,
-        data
+    if(School){
+        const data=await teacher.findAll({where:{school:School.school,status:1},attributes:[['tid','id'],['chineseName','name']]})
+        ctx.body={
+            code:0,
+            data
+        }
+    }else{
+        ctx.body={
+            code:-1,
+            data:{
+                message:'无'
+            }
+        }
     }
 }
 
@@ -597,6 +605,62 @@ const checkGroupFalse=async (ctx,next)=>{
     }
 }
 
+const checkApplyTrue=async (ctx,next)=>{
+    const {Id}=ctx.request.body
+    try{
+        for(x of Id){
+            if(x.type=='single'){
+                await applySingle.update({status:1},{where:{id:x.id}})
+            }
+            else if(x.type=='group'){
+                await applyGroup.update({status:1},{where:{gid:x.id}})
+            }
+        }
+        ctx.body={
+            code:0,
+            data:{
+                message:"审核成功"
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:"审核失败"
+            }
+        }
+    }
+}
+
+const checkApplyFalse=async (ctx,next)=>{
+    const {Id}=ctx.request.body
+    try{
+        for(x of Id){
+            if(x.type=='single'){
+                await applySingle.update({status:-1,remark:x.remark},{where:{id:x.id}})
+            }
+            else if(x.type=='group'){
+                await applyGroup.update({status:-1,remark:x.remark},{where:{id:x.id}})
+            }
+        }
+        ctx.body={
+            code:0,
+            data:{
+                message:"审核成功"
+            }
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:"审核失败"
+            }
+        }
+    }
+}
+
 module.exports={
     showContest,
     singleApply,
@@ -615,5 +679,7 @@ module.exports={
     checkSingleFalse,
     checkGroupTrue,
     checkGroupFalse,
-    studentShowApply
+    studentShowApply,
+    checkApplyTrue,
+    checkApplyFalse
 }

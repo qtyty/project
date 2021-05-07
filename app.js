@@ -105,6 +105,9 @@ router.post('/user/manager/apply/checkSingleFalse',apply.checkSingleFalse)
 router.post('/user/manager/apply/checkGroupTrue',apply.checkGroupTrue)
 router.post('/user/manager/apply/checkGroupFalse',apply.checkGroupFalse)
 
+router.post('/user/manager/apply/checkApplyTrue',apply.checkApplyTrue)
+router.post('/user/manager/apply/checkApplyFalse',apply.checkApplyFalse)
+
 router.post('/user/manager/showGrade',grade.showGrade)
 
 app.use(bodyParser())
