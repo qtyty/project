@@ -606,9 +606,9 @@ const checkGroupFalse=async (ctx,next)=>{
 }
 
 const checkApplyTrue=async (ctx,next)=>{
-    const {Id}=ctx.request.body
+    const {data}=ctx.request.body
     try{
-        for(x of Id){
+        for(x of data){
             if(x.type=='single'){
                 await applySingle.update({status:1},{where:{id:x.id}})
             }
@@ -634,9 +634,9 @@ const checkApplyTrue=async (ctx,next)=>{
 }
 
 const checkApplyFalse=async (ctx,next)=>{
-    const {Id}=ctx.request.body
+    const {data}=ctx.request.body
     try{
-        for(x of Id){
+        for(x of data){
             if(x.type=='single'){
                 await applySingle.update({status:-1,remark:x.remark},{where:{id:x.id}})
             }
