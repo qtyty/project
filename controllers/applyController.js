@@ -283,22 +283,33 @@ const showGroup=async (ctx,next)=>{
 const studentShowApply=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    let data1=await applySingle.findAll({where:{uid:uid},attributes:['id','cid','status']})
+    var data1=await applySingle.findAll({where:{uid:uid},attributes:['id','cid','status','remark'],raw:true})
     for(x of data1){
         const C=await contest.findOne({where:{cid:x.cid},attributes:['name','type']})
         x['name']=C.name
-        if(C.name=='single') x['type']='个人赛'
-        else if(C.name=='group') x['type']='团体赛'
+        if(C.type=='single') x['type']='个人赛'
+        else if(C.type=='group') x['type']='团体赛'
     }
-    const Gid=await groupTeam.findAll({where:{uid:uid}})
-    let data2=await applyGroup.findAll({where:{gid:Gid.gid},attributes:['cid','status']})
-    for(x of data2){
-        const C=await contest.findOne({where:{cid:x.cid},attributes:['name','type']})
-        x['name']=C.name
-        if(C.name=='single') x['type']='个人赛'
-        else if(C.name=='group') x['type']='团体赛'
+    const Gid=await groupTeam.findAll({where:{uid:uid},attributes:['gid'],raw:true})
+    if(Gid){
+        let Select=[]
+        for(x of Gid){
+            Select.push(x.gid)
+        }
+        var data2=await applyGroup.findAll({where:{gid:Select},attributes:[['gid','id'],'cid','status','remark'],raw:true})
+        //data2=JSON.parse(JSON.stringify(data2))
+        console.log(data2)
+        for(x of data2){
+            const C=await contest.findOne({where:{cid:x.cid},attributes:['name','type']})
+            x['name']=C.name
+            if(C.type=='single') x['type']='个人赛'
+            else if(C.type=='group') x['type']='团体赛'
+        }
     }
-    const data=data1.concat(b)
+    else{
+        var data2=[]
+    }
+    const data=data1.concat(data2)
     ctx.body={
         code:0,
         data
