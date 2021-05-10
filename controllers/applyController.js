@@ -181,12 +181,12 @@ const groupApply=async (ctx,next)=>{
             break
         }
         else{
-            const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:[['sid','uid']]})
-            if(user) Select.push(user.uid)
+            const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:[['sid','uid'],'school']})
+            if(user) Select.push(user.school)
             else break
         }
     }
-    if(Select.length!=members.length){
+    if(Select.length!=members.length || new Set(Select).size!==1 ){
         ctx.body={
             code:-1,
             data:{
