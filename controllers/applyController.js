@@ -298,7 +298,7 @@ const studentShowApply=async (ctx,next)=>{
         }
         var data2=await applyGroup.findAll({where:{gid:Select},attributes:[['gid','id'],'cid','status','remark'],raw:true})
         //data2=JSON.parse(JSON.stringify(data2))
-        console.log(data2)
+        //console.log(data2)
         for(x of data2){
             const C=await contest.findOne({where:{cid:x.cid},attributes:['name','type']})
             x['name']=C.name
