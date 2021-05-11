@@ -150,7 +150,7 @@ const AvailableRoom=async (ctx,next)=>{
         //replacements:{},
         type:QueryTypes.SELECT
     })*/
-    let data=await room.findAll({where:{status:'0'},attributes:['rid','name','address','number']})
+    let data=await room.findAll({where:{status:'0'},attributes:['rid','name','address','number'],raw:true})
     for(x of data){
         x['rName']=x.address+x.name
         x['address']=undefined
