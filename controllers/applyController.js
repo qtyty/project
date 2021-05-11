@@ -317,6 +317,37 @@ const studentShowApply=async (ctx,next)=>{
 }
 
 
+const studentShowGroup=async (ctx,next)=>{
+    const {id}=ctx.request.query
+    try{
+        let data=await applyGroup.findOne({where:{gid:id},attributes:['groupName','cid','tid'],raw:true})
+        //console.log(data)
+        const members=await groupTeam.findAll({where:{gid:id},attributes:['uid'],raw:true})
+        console.log(members)
+        let Select=[]
+        for(x of members){
+            Select.push(x.uid)
+        }
+        let M=await student.findAll({where:{sid:Select},attributes:['id',['chineseName','sname']],raw:true})
+        data['members']=M
+        const Contest=await contest.findOne({where:{cid:data.cid},attributes:['name']})
+        data['cName']=Contest.name
+        data['cid']=undefined
+        ctx.body={
+            code:0,
+            data
+        }
+    }catch(e){
+        console.log(e)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'查询失败'
+            }
+        }
+    }
+}
+
 const updateGroup=async (ctx,next)=>{
     const {cid,gname,tid,members}=ctx.request.body
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
@@ -692,5 +723,6 @@ module.exports={
     checkGroupFalse,
     studentShowApply,
     checkApplyTrue,
-    checkApplyFalse
+    checkApplyFalse,
+    studentShowGroup
 }

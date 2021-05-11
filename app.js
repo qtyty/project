@@ -73,7 +73,9 @@ router.post('/user/applySingle',apply.singleApply)
 router.post('/user/cancelContest',apply.cancelContest)
 router.get('/user/showSingle',apply.showSingle)
 
+
 router.get('/user/student/showApply',apply.studentShowApply)
+router.get('/user/student/showGroup',apply.studentShowGroup)
 
 router.get('/user/showTeacher',apply.showTeacher)
 router.post('/user/applyGroup',apply.groupApply)
