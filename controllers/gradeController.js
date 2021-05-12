@@ -6,7 +6,9 @@ const { QueryTypes } = require('sequelize');
 const Op = Sequelize.Op
 const {User,student,teacher,University,checkUniversity} = require('../util/model/User');
 const {grade}=require('../util/model/Grade')
-
+const XlSX = require("node-xlsx")
+const XLSX=require('xlsx')
+const Mock = require("mockjs")
 
 const showGrade=async (ctx,next)=>{
     const {cid}=ctx.request.body
@@ -105,9 +107,39 @@ const updateSingle=async (ctx,next)=>{
 }
 
 
+const showExecl=async (ctx,next)=>{
+    const {cid}=ctx.request.query
+    const Contest=await contest.findOne({where:{cid:cid},attributes:['name','type']})
+    if(Contest.type=='single'){
+        const headers=['序号','姓名','成绩']
+        let data=await applySingle.findAll({where:{cid:cid,status:1},attributes:['uid','id'],raw:true})
+        for(x of data){
+            const S=await student.findOne({where:{sid:x.uid},attributes:['chineseName']})
+            x['name']=S.name
+            x['uid']=undefined
+        }
+        let sheet = XLSX.utils.aoa_to_sheet(data)
+        let result = sheetToBuffer(sheet)
+        //let buffer=XlSX.build([{name:data.name+'成绩模板',data:_data}])
+        ctx.body={
+            code:0,
+            result
+        }
+    }else if(Contest.type=='group'){
+
+    }else{
+        ctx.body={
+            code:-1,
+            data:{
+                message:'失败'
+            }
+        }
+    }
+}
 
 
 
 module.exports={
-    showGrade
+    showGrade,
+    showExecl
 }

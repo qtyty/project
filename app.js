@@ -112,6 +112,8 @@ router.post('/user/manager/apply/checkApplyFalse',apply.checkApplyFalse)
 
 router.post('/user/manager/showGrade',grade.showGrade)
 
+router.get('/user/manager/showExecl',grade.showExecl)
+
 app.use(bodyParser())
 app.use(jwtKoa({secret:secret}).unless({
    path:[

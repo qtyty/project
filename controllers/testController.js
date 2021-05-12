@@ -4,6 +4,8 @@ const {contest}=require('../util/model/contest')
 const Sequelize = require('sequelize')
 const { QueryTypes } = require('sequelize');
 const Op = Sequelize.Op
+const {applySingle,applyGroup,groupTeam}=require('../util/model/apply')
+
 
 const addRoom=async (ctx,next)=>{
     const {name,address,number}=ctx.request.body
@@ -123,6 +125,23 @@ const addArrange=async (ctx,next)=>{
     }
 }
 
+async function countSum(cid){
+    const Cid=await contest.findOne({where:{cid:cid},attributes:['cid','type']})
+    if(Cid.type=='single'){
+        let count=await applySingle.findAll({where:{cid:cid},attributes:[[Sequelize.fn('count',sequelize.col('uid')),'uidCount']]})
+        count=JSON.parse(JSON.stringify(count))
+        //console.log(count)
+        return count[0].uidCount
+    }
+    else if(Cid.type=='group'){
+        let count=await applyGroup.findAll({where:{cid:cid},attributes:[[Sequelize.fn('count',sequelize.col('gid')),'gidCount']]})
+        count=JSON.parse(JSON.stringify(count))
+        //console.log(count)
+        return count[0].gidCount
+    }
+}
+
+
 const showArrange=async (ctx,next)=>{
     const {cid}=ctx.request.query
     let Select={}
@@ -137,6 +156,8 @@ const showArrange=async (ctx,next)=>{
         Cid=JSON.parse(JSON.stringify(Cid))
         x['cname']=Cid.name
         x['rName']=Number.address+Number.name
+        const Sum=await countSum(x.cid)
+        x['sum']=Sum
     }
     ctx.body={
         code:0,
