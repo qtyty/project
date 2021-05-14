@@ -1,7 +1,7 @@
 const {Sequelize,sequelize} = require('../init')
 
 const grade=sequelize.define('grade',{
-    gid:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
+    id:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
     cid:{type:Sequelize.INTEGER},
     aid:{type:Sequelize.INTEGER},   //报名表id
     grade:{type:Sequelize.INTEGER}

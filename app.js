@@ -10,6 +10,8 @@ const koaBody=require('koa-body')
 const app = new Koa()
 const secret='secret'
 
+app.use(cors())
+
 app.use((ctx,next)=>{
    return next().catch((err)=>{
       if (err.status === 401) {
@@ -24,7 +26,10 @@ app.use((ctx,next)=>{
    })
 })
 
-app.use(cors())
+
+//app.use(bodyParser())
+app.use(koaBody({multipart:true,formidable: {keepExtensions: true}}))
+
 
 const user=require('./controllers/userController')
 const contest=require('./controllers/contestController')
@@ -113,8 +118,12 @@ router.post('/user/manager/apply/checkApplyFalse',apply.checkApplyFalse)
 router.post('/user/manager/showGrade',grade.showGrade)
 
 router.get('/user/manager/showExecl',grade.showExecl)
+router.post('/user/manager/addGrade',grade.addGrade)
 
-app.use(bodyParser())
+
+app.use(router.routes())
+app.use(router.allowedMethods())
+
 app.use(jwtKoa({secret:secret}).unless({
    path:[
       /^\/user\/sendCode/,
@@ -125,7 +134,5 @@ app.use(jwtKoa({secret:secret}).unless({
    ]
 }))
 
-app.use(router.routes())
-app.use(router.allowedMethods())
 
 app.listen(3000)

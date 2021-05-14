@@ -455,13 +455,13 @@ const showApply=async (ctx,next)=>{
         }
     }
     else if(Contest.type=='group'){
-        var data=await applyGroup.findAll({where:{cid:id},attributes:['gid','cid','groupName','tid','status','remark']})
+        var data=await applyGroup.findAll({where:{cid:id},attributes:[['gid','id'],'cid','groupName','tid','status','remark']})
         data=JSON.parse(JSON.stringify(data))
         for(x of data){
             const TeacherName=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName','tid']})
             x['tname']=TeacherName['chineseName']
             var members=[]
-            var Uid=await groupTeam.findAll({where:{gid:x.gid},attributes:['uid']})
+            var Uid=await groupTeam.findAll({where:{gid:x.id},attributes:['uid']})
             Uid=JSON.parse(JSON.stringify(Uid))
             for(i of Uid){
                 var user=await student.findOne({where:{sid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
