@@ -119,7 +119,7 @@ router.post('/user/manager/showGrade',grade.showGrade)
 
 router.get('/user/manager/showExecl',grade.showExecl)
 router.post('/user/manager/addGrade',grade.addGrade)
-
+router.get('/user/student/showGrade',grade.studentShowGrade)
 
 app.use(router.routes())
 app.use(router.allowedMethods())

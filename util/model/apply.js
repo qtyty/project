@@ -5,7 +5,8 @@ const applySingle=sequelize.define('applySingle',{
     uid:{type:Sequelize.INTEGER},
     cid:{type:Sequelize.INTEGER},
     status:{type:Sequelize.ENUM('-1','0','1')},
-    remark:{type:Sequelize.STRING}
+    remark:{type:Sequelize.STRING},
+    grade:{type:Sequelize.INTEGER}
 },{
     timestamps: false,
     freezeTableName: true
@@ -18,7 +19,8 @@ const applyGroup=sequelize.define('applyGroup',{
     tid:{type:Sequelize.INTEGER},
     suid:{type:Sequelize.INTEGER},
     status:{type:Sequelize.ENUM('-1','0','1')},
-    remark:{type:Sequelize.STRING}
+    remark:{type:Sequelize.STRING},
+    grade:{type:Sequelize.INTEGER}
 },{
     timestamps: false,
     freezeTableName: true

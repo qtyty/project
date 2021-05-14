@@ -11,28 +11,29 @@ const XLSX=require('xlsx')
 const Mock = require("mockjs")
 const fs=require('fs')
 const path = require('path');
-const downPath = path.resolve(__dirname, '../data');
+const jwt = require('jsonwebtoken')
+const downPath = path.resolve(__dirname, '../data')
+const secret='secret'
+
 const showGrade=async (ctx,next)=>{
     const {cid}=ctx.request.body
-    const Cid=await contest.findOne({where:{cid:cid},attributes:['type']})
-    let data=await grade.findAll({where:{cid:cid},attributes:['aid','grade']})
-    data=JSON.parse(JSON.stringify(data))
-    if(Cid.type=='single'){
+    let C=await contest.findOne({where:{cid:cid}})
+    if(C.type=='single'){
         try{
+            let data=await applySingle.findAll({where:{cid:cid,status:'1'},attributes:['id','uid','grade'],raw:true})
+            //console.log(data)
             for(x of data){
-                const Id=await applySingle.findOne({where:{id:x.aid}})
-                const Uid=await student.findOne({where:{sid:Id.uid},attributes:['id','chineseName']})
-                x['id']=x.aid
-                x['sid']=Uid.id
-                x['sname']=Uid.chineseName
-                x['aid']=undefined
+                const S=await student.findOne({where:{sid:x.uid},attributes:['id','chineseName']})
+                x['sid']=S.id
+                x['name']=S.chineseName
+                x['type']='single'
             }
             ctx.body={
                 code:0,
                 data
             }
         }catch(e){
-            console.log(e)
+            console.error(e.message)
             ctx.body={
                 code:-1,
                 data:{
@@ -40,69 +41,76 @@ const showGrade=async (ctx,next)=>{
                 }
             }
         }
-    }
-    else if(Cid.type=='group'){
+    }else if(C.type=='group'){
         try{
+            let data=await applyGroup.findAll({where:{cid:cid,status:'1'},attributes:[['gid','id'],'groupName','tid','grade'],raw:true})
             for(x of data){
-                const Gid=await applyGroup.findOne({where:{gid:x.aid}})
-                const TeacherName=await teacher.findOne({where:{tid:Gid.tid},attributes:['chineseName','tid']})
-                x['tname']=TeacherName['chineseName']
+                const T=await teacher.findOne({where:{tid:x.tid},attributes:['chineseName']})
+                x['tname']=T.chineseName
+                x['type']='group'
                 var members=[]
-                var Uid=await groupTeam.findAll({where:{gid:Gid.gid},attributes:['uid']})
-                Uid=JSON.parse(JSON.stringify(Uid))
-                for(i of Uid){
-                    var user=await student.findOne({where:{sid:i.uid},attributes:['chineseName','englishName','sex','year','id','email','phone']})
-                    user=JSON.parse(JSON.stringify(user))
-                    if(user.sex=='male') user.sex='男'
-                    else if(user.sex=='female') user.sex='女'
-                    members.push(user)
+                const U=await groupTeam.findAll({where:{gid:x.id},attributes:['uid'],raw:true})
+                for(y of U){
+                    const S=await student.findOne({where:{sid:y.uid},attributes:['id','chineseName']})
+                    members.push({'id':S.id,'name':S.chineseName})
                 }
                 //console.log(members)
                 x['members']=members
-                x['cid']=undefined
-                x['tid']=undefined
             }
             ctx.body={
                 code:0,
                 data
             }
         }catch(e){
-            console.log(e)
+            console.error(e.message)
             ctx.body={
                 code:-1,
                 data:{
                     message:'查询错误'
                 }
-            }
-        }
-    }
-    else{
-        ctx.body={
-            code:-2,
-            data:{
-                message:'cid错误'
             }
         }
     }
 }
 
 
-const updateSingle=async (ctx,next)=>{
-    const {id,grade}=ctx.request.body
-    try{
-        await grade.update({grade:grade},{where:{aid:id}})
-        ctx.body={
-            code:0,
-            data:{
-                message:'修改成功'
+const updateGrade=async (ctx,next)=>{
+    const {id,type,grade}=ctx.request.body
+    if(type=='single'){
+        try{
+            await applySingle.update({grade:grade},{id:id})
+            ctx.body={
+                code:0,
+                data:{
+                    message:'修改成功'
+                }
+            }
+        }catch(e){
+            console.error(e.message)
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'修改失败'
+                }
             }
         }
-    }catch(e){
-        console.log(e)
-        ctx.body={
-            code:-1,
-            data:{
-                message:'修改失败'
+    }
+    else if(type=='group'){
+        try{
+            await applyGroup.update({grade:grade},{gid:id})
+            ctx.body={
+                code:0,
+                data:{
+                    message:'修改成功'
+                }
+            }
+        }catch(e){
+            console.error(e.message)
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'修改失败'
+                }
             }
         }
     }
@@ -236,8 +244,38 @@ const addGrade=async (ctx,next)=>{
     }
 }
 
+
+const studentShowGrade=async (ctx,next)=>{
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    let data1=await applySingle.findAll({where:{uid:uid,status:'1'},attributes:['id','cid','grade'],raw:true})
+    for(x of data1){
+        const C=await contest.findOne({where:{cid:x.cid},attributes:['name']})
+        x['name']=C.name
+        x['cid']=undefined
+    }
+    let Gid=await groupTeam.findAll({where:{uid:uid},attributes:['gid'],raw:true})
+    let Select=[]
+    for(x of Gid){
+        Select.push(x['gid'])
+    }
+    let data2=await applyGroup.findAll({where:{gid:Select,status:'1'},attributes:[['gid','id'],'grade','cid'],raw:true})
+    for(x of data2){
+        const C=await contest.findOne({where:{cid:x.cid},attributes:['name']})
+        x['name']=C.name
+        x['cid']=undefined
+    }
+    let data=data1.concat(data2)
+    ctx.body={
+        code:0,
+        data
+    }
+}   
+
+
 module.exports={
     showGrade,
     showExecl,
-    addGrade
+    addGrade,
+    studentShowGrade
 }

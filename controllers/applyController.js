@@ -176,21 +176,41 @@ const groupApply=async (ctx,next)=>{
     }
     else{
     let Select=[]
+    let UserSelect=[]
     for(x of members){
         if(!x.id || !x.name){
             break
         }
         else{
             const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:[['sid','uid'],'school']})
-            if(user) Select.push(user.school)
+            if(user) {
+                Select.push(user.school)
+                UserSelect.push(user.uid)
+            }
             else break
         }
     }
-    if(Select.length!=members.length || new Set(Select).size!==1 ){
+    if(Select.length!=members.length){
         ctx.body={
             code:-1,
             data:{
                 message:'用户信息错误'
+            }
+        }
+    }
+    else if(new Set(Select).size!==1){
+        ctx.body={
+            code:-2,
+            data:{
+                message:'小组成员应在同一学校'
+            }
+        }
+    }
+    else if(new Set(UserSelect).size!=members.length){
+        ctx.body={
+            code:-3,
+            data:{
+                message:'小组成员相同'
             }
         }
     }
@@ -488,7 +508,7 @@ const countNumber=async (ctx,next)=>{
     const {cid}=ctx.request.query
     const Cid=await contest.findOne({where:{cid:cid},attributes:['cid','type']})
     if(Cid.type=='single'){
-        let count=await applySingle.findAll({where:{cid:cid},attributes:[[Sequelize.fn('count',sequelize.col('uid')),'uidCount']]})
+        let count=await applySingle.findAll({where:{cid:cid,status:'1'},attributes:[[Sequelize.fn('count',sequelize.col('uid')),'uidCount']]})
         count=JSON.parse(JSON.stringify(count))
         //console.log(count)
         ctx.body={
@@ -499,7 +519,7 @@ const countNumber=async (ctx,next)=>{
         }
     }
     else if(Cid.type=='group'){
-        let count=await applyGroup.findAll({where:{cid:cid},attributes:[[Sequelize.fn('count',sequelize.col('gid')),'gidCount']]})
+        let count=await applyGroup.findAll({where:{cid:cid,status:'1'},attributes:[[Sequelize.fn('count',sequelize.col('gid')),'gidCount']]})
         count=JSON.parse(JSON.stringify(count))
         //console.log(count)
         ctx.body={
@@ -652,10 +672,10 @@ const checkApplyTrue=async (ctx,next)=>{
     try{
         for(x of data){
             if(x.type=='single'){
-                await applySingle.update({status:1},{where:{id:x.id}})
+                await applySingle.update({status:'1'},{where:{id:x.id}})
             }
             else if(x.type=='group'){
-                await applyGroup.update({status:1},{where:{gid:x.id}})
+                await applyGroup.update({status:'1'},{where:{gid:x.id}})
             }
         }
         ctx.body={
@@ -680,10 +700,10 @@ const checkApplyFalse=async (ctx,next)=>{
     try{
         for(x of data){
             if(x.type=='single'){
-                await applySingle.update({status:-1,remark:x.remark},{where:{id:x.id}})
+                await applySingle.update({status:'-1',remark:x.remark},{where:{id:x.id}})
             }
             else if(x.type=='group'){
-                await applyGroup.update({status:-1,remark:x.remark},{where:{id:x.id}})
+                await applyGroup.update({status:'-1',remark:x.remark},{where:{id:x.id}})
             }
         }
         ctx.body={

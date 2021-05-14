@@ -9,6 +9,7 @@ const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 var cache=require('memory-cache')
 const e = require('express')
+const { accessSync } = require('fs')
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
   port: 465,
@@ -50,9 +51,10 @@ const sendCode=async (ctx,next)=>{
     }
     try {
         //await Email.create({email:email,code:code,createtime:Date.now()})
+        
+        await transporter.sendMail(mailOptions)
         cache.put(email,code,10*60*1000)
         console.log('验证码'+code)
-        await transporter.sendMail(mailOptions)
         ctx.body = {
             code: 0,
             data:{
@@ -60,7 +62,7 @@ const sendCode=async (ctx,next)=>{
             }
         }
       } catch(e) {
-        //throw new Error(e)
+        console.error(e.message)
         ctx.body = {
             code: -1,
             data:{
@@ -605,21 +607,40 @@ const updateUniversity=async (ctx,next)=>{
     }
 }
 
+
+
 const deleteUniversity=async (ctx,next)=>{
     const {id}=ctx.request.body
     //for(let x of id){
         try{
+            let Select=[]
             for(x of id){
-                const S=await student.findAll({where:{school:id},attributes:['sid']})
-                const T=await teacher.findAll({where:{school:id},attributes:['tid']})
-                if(!S && !T){
-                    await University.destroy({where:{id:id}})
+                console.log(x)
+                const S=await student.findOne({where:{school:x},attributes:['sid']})
+                const T=await teacher.findOne({where:{school:x},attributes:['tid']})
+                if(S || T){
+                    const Name=await University.findOne({where:{id:x},attributes:['name']})
+                    Select.push(Name.name)
+                }
+                else{
+                    await University.destroy({where:{id:x}})
                 }
             }
-            ctx.body={
-                code:0,
-                data:{
-                    message:'删除成功'
+            if(Select){
+                str=Select.join(',')
+                ctx.body={
+                    code:0,
+                    data:{
+                        message:str+'已被选择，不能删除'
+                    }
+                }
+            }
+            else{
+                ctx.body={
+                    code:0,
+                    data:{
+                        message:'删除成功'
+                    }
                 }
             }
         }catch(e){
@@ -666,17 +687,34 @@ const checkTrue=async (ctx,next)=>{
 const checkFalse=async (ctx,next)=>{
     const {id}=ctx.request.body
     try{
+        let Select=[]
         for(x of id){
-            const S=await student.findAll({where:{school:id},attributes:['sid']})
-            const T=await teacher.findAll({where:{school:id},attributes:['tid']})
-            if(!S && !T){
-                await University.update({status:-1},{where:{id:id}})
+            console.log(x)
+            const S=await student.findOne({where:{school:x},attributes:['sid']})
+            const T=await teacher.findOne({where:{school:x},attributes:['tid']})
+            if(S || T){
+                const Name=await University.findOne({where:{id:x},attributes:['name']})
+                Select.push(Name.name)
+            }
+            else{
+                await University.update({status:-1},{where:{id:x}})
             }
         }
-        ctx.body={
-            code:0,
-            data:{
-                message:'成功'
+        if(Select){
+            str=Select.join(',')
+            ctx.body={
+                code:0,
+                data:{
+                    message:str+'已被选择，不能修改'
+                }
+            }
+        }
+        else{
+            ctx.body={
+                code:0,
+                data:{
+                    message:'删除成功'
+                }
             }
         }
     }catch(e){
