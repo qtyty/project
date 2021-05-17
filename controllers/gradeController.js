@@ -220,16 +220,22 @@ const addGrade=async (ctx,next)=>{
         console.log(data)
         try{
             for(x of data){
-                let Cid=await contest.findOne({where:{name:x['赛事名称']},attributes:['cid']})
-                let cid=Cid.cid
-                let aid=x['序号']
-                let Grade=x['成绩']
-                await grade.create({cid:cid,aid:aid,grade:Grade})
+                let Cid=await contest.findOne({where:{name:x['赛事名称']},attributes:['cid','type']})
+                if(Cid.type=='single'){
+                    const Grade=x['成绩']
+                    const id=x['序号']
+                    await applySingle.update({grade:Grade},{where:{id:id,status:'1'}},(e)=>{console.error(e.message)})
+                }
+                else if(Cid.type=='group'){
+                    const Grade=x['成绩']
+                    const id=x['序号']
+                    await applyGroup.update({grade:Grade},{where:{gid:id,status:'1'}},(e)=>{console.error(e.message)})
+                }
             }
             ctx.body={
                 code:0,
                 data:{
-                    message:'操作成功'
+                    message:'上传成功'
                 }
             }
         }catch(e){
@@ -277,5 +283,6 @@ module.exports={
     showGrade,
     showExecl,
     addGrade,
-    studentShowGrade
+    studentShowGrade,
+    updateGrade
 }

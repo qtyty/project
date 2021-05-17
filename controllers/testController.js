@@ -104,14 +104,33 @@ const showRoom=async (ctx,next)=>{
 const addArrange=async (ctx,next)=>{
     const {data}=ctx.request.body
     try{
+        let Select=[]
         for(x of data){
-            await arrange.create({rid:x.rid,cid:x.cid,num:x.num})
-            await room.update({status:'1'},{where:{rid:x.rid}})
+            const data=await arrange.findAll({where:{rid:x.rid,cid:x.cid}})
+            if(data){
+                const rName=await room.findOne({where:{rid:x.rid},attributes:['name']})
+                Select.push(rName.name)
+            }
+            else{
+                await arrange.create({rid:x.rid,cid:x.cid,num:x.num})
+                await room.update({status:'1'},{where:{rid:x.rid}})
+            }
         }
-        ctx.body={
-            code:0,
-            data:{
-                message:'考场安排成功'
+        if(Select){
+            str=Select.join(',')+'已安排'
+            ctx.body={
+                code:-1,
+                data:{
+                    message:str
+                }
+            }
+        }
+        else{
+            ctx.body={
+                code:0,
+                data:{
+                    message:'考场安排成功'
+                }
             }
         }
     }catch(e){
