@@ -628,7 +628,7 @@ const deleteUniversity=async (ctx,next)=>{
             if(Select){
                 str=Select.join(',')
                 ctx.body={
-                    code:0,
+                    code:-1,
                     data:{
                         message:str+'已被选择，不能删除'
                     }
@@ -688,7 +688,7 @@ const checkFalse=async (ctx,next)=>{
     try{
         let Select=[]
         for(x of id){
-            console.log(x)
+            //console.log(x)
             const S=await student.findOne({where:{school:x},attributes:['sid']})
             const T=await teacher.findOne({where:{school:x},attributes:['tid']})
             if(S || T){
@@ -702,7 +702,7 @@ const checkFalse=async (ctx,next)=>{
         if(Select){
             str=Select.join(',')
             ctx.body={
-                code:0,
+                code:-1,
                 data:{
                     message:str+'已被选择，不能修改'
                 }
