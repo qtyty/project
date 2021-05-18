@@ -12,20 +12,19 @@ const secret='secret'
 
 app.use(cors())
 
-app.use(async (ctx,next)=>{
-   try {
-      return next()
-   } catch (err) {
-      if (err.status===400 ) {
+app.use((ctx,next)=>{
+   return next().catch((err)=>{
+      console.error(err.message)
+      //if (err.status === 401) {
          ctx.status = 401
          ctx.body = {
-            ok: false,
-            message: err.originalError ? err.originalError.message : err.message
+             ok: false,
+             message: err.originalError ? err.originalError.message : err.message
          }
-      } else {
-         throw err
-      }
-   }
+     //} else {
+     //    throw err
+    // }
+   })
 })
 
 

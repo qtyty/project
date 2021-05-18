@@ -205,7 +205,7 @@ const login=async (ctx,next)=>{
                     code:0,
                     data:{
                         message:'登录成功',
-                        token:jwt.sign({uid:user.uid,email:email,password:password,status:status},secret,{expiresIn:'10m'})
+                        token:jwt.sign({uid:user.uid,email:email,password:password,status:status},secret,{expiresIn:'4h'})
                     }
                 }
             }
