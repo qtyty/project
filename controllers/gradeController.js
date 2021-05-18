@@ -224,12 +224,12 @@ const addGrade=async (ctx,next)=>{
                 if(Cid.type=='single'){
                     const Grade=x['成绩']
                     const id=x['序号']
-                    await applySingle.update({grade:Grade},{where:{id:id,status:'1'}},(e)=>{console.error(e.message)})
+                    await applySingle.update({grade:Grade},{where:{id:id,cid:Cid.cid,status:'1'}},(e)=>{console.error(e.message)})
                 }
                 else if(Cid.type=='group'){
                     const Grade=x['成绩']
                     const id=x['序号']
-                    await applyGroup.update({grade:Grade},{where:{gid:id,status:'1'}},(e)=>{console.error(e.message)})
+                    await applyGroup.update({grade:Grade},{where:{gid:id,cid:Cid.cid,status:'1'}},(e)=>{console.error(e.message)})
                 }
             }
             ctx.body={

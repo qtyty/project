@@ -177,19 +177,26 @@ const groupApply=async (ctx,next)=>{
     else{
     let Select=[]
     let UserSelect=[]
+    let ApplySelect=[]
     for(x of members){
         if(!x.id || !x.name){
             break
         }
         else{
-            const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:[['sid','uid'],'school']})
+            const user=await student.findOne({where:{id:x.id,chineseName:x.name,status:1},attributes:[['sid','uid'],'school','chineseName'],raw:true})
             if(user) {
                 Select.push(user.school)
                 UserSelect.push(user.uid)
+                const Apply=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid', {
+                    replacements:{uid:user.uid,cid:cid},
+                    type: QueryTypes.SELECT
+                  })
+                if(Apply) ApplySelect.push(user.chineseName)
             }
             else break
         }
     }
+    //console.log(UserSelect)
     if(Select.length!=members.length){
         ctx.body={
             code:-1,
@@ -211,6 +218,14 @@ const groupApply=async (ctx,next)=>{
             code:-3,
             data:{
                 message:'小组成员相同'
+            }
+        }
+    }
+    else if(ApplySelect){
+        ctx.body={
+            code:-2,
+            data:{
+                message:ApplySelect.join(',')+'已报名'
             }
         }
     }

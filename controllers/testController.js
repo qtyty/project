@@ -300,7 +300,7 @@ const createAdmission=async (ctx,next)=>{
             var index = Math.floor((Math.random()*availUser.length))
             let User=availUser[index]
             availUser.splice(index,1)
-            console.log(availUser)
+            //console.log(availUser)
             try{
                 let code=cid.toString()+Arrange[i].rid.toString()+(j+1).toString()+User.toString()
                 await admission.create({uid:User,cid:cid,rid:Arrange[i].rid,seat:j+1,admissionNumber:code})
