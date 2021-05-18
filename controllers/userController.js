@@ -8,7 +8,6 @@ const secret='secret'
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 var cache=require('memory-cache')
-const e = require('express')
 const { accessSync } = require('fs')
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
@@ -206,7 +205,7 @@ const login=async (ctx,next)=>{
                     code:0,
                     data:{
                         message:'登录成功',
-                        token:jwt.sign({uid:user.uid,email:email,password:password,status:status},secret,{expiresIn:'4h'})
+                        token:jwt.sign({uid:user.uid,email:email,password:password,status:status},secret,{expiresIn:'10m'})
                     }
                 }
             }

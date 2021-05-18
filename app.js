@@ -12,18 +12,20 @@ const secret='secret'
 
 app.use(cors())
 
-app.use((ctx,next)=>{
-   return next().catch((err)=>{
-      if (err.status === 401) {
-         ctx.status = 401;
+app.use(async (ctx,next)=>{
+   try {
+      return next()
+   } catch (err) {
+      if (err.status===400 ) {
+         ctx.status = 401
          ctx.body = {
-             ok: false,
-             message: err.originalError ? err.originalError.message : err.message
+            ok: false,
+            message: err.originalError ? err.originalError.message : err.message
          }
-     } else {
-         throw err;
-     }
-   })
+      } else {
+         throw err
+      }
+   }
 })
 
 
@@ -121,6 +123,12 @@ router.get('/user/manager/showExecl',grade.showExecl)
 router.post('/user/manager/addGrade',grade.addGrade)
 router.get('/user/student/showGrade',grade.studentShowGrade)
 router.post('/user/manager/updateGrade',grade.updateGrade)
+
+
+router.post('/user/manager/createAdm',test.createAdmission)
+router.get('/user/manager/showAdm',test.showAdm)
+router.get('/user/student/showAdm',test.studentShowAdm)
+
 
 app.use(router.routes())
 app.use(router.allowedMethods())

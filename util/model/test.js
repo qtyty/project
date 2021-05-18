@@ -26,6 +26,7 @@ const admission=sequelize.define('admission',{
     uid:{type:Sequelize.INTEGER},
     cid:{type:Sequelize.INTEGER},
     rid:{type:Sequelize.INTEGER},
+    seat:{type:Sequelize.INTEGER},
     admissionNumber:{type:Sequelize.INTEGER}
 },{
     timestamps: false,

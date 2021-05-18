@@ -4,8 +4,10 @@ const {contest}=require('../util/model/contest')
 const Sequelize = require('sequelize')
 const { QueryTypes } = require('sequelize');
 const Op = Sequelize.Op
-const {applySingle,applyGroup,groupTeam}=require('../util/model/apply')
-
+const {applySingle,applyGroup,groupTeam}=require('../util/model/apply');
+const {User,student,teacher,University,manager} = require('../util/model/User')
+const jwt = require('jsonwebtoken')
+const secret='secret'
 
 const addRoom=async (ctx,next)=>{
     const {name,address,number}=ctx.request.body
@@ -253,6 +255,143 @@ const updateArrange=async (ctx,next)=>{
     }
 }
 
+const createAdmission=async (ctx,next)=>{
+    const {cid}=ctx.request.body
+    try{
+        await admission.destroy({where:{cid:cid}})
+    }catch(e){
+        console.error(e.message)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'重新生成失败'
+            }
+        }
+    }
+    const Arrange=await arrange.findAll({where:{cid:cid},attributes:['rid','num'],raw:true})
+    let availRid=[]
+    for(x of Arrange){
+        availRid.push(x.rid)
+    }
+    //console.log(availRid)
+    const Contest=await contest.findOne({where:{cid:cid},attributes:['type']})
+    let availUser=[]
+    if(Contest.type=='single'){
+        const S=await applySingle.findAll({where:{cid:cid,status:'1'},attributes:['uid'],raw:true})
+        for(x of S){
+            availUser.push(x.uid)
+        }
+    }else if(Contest.type=='group'){
+        const S=await applyGroup.findAll({where:{cid:cid,status:'1'},attributes:['gid'],raw:true})
+        for(x of S){
+            availUser.push(x.gid)
+        }
+    }
+    //console.log(availUser)
+    //console.log(Arrange.length)
+    i=0
+    j=0
+    while(i<Arrange.length){
+        if(j==Arrange[i].num){
+            i+=1
+            j=0
+        }
+        else{
+            var index = Math.floor((Math.random()*availUser.length))
+            let User=availUser[index]
+            availUser.splice(index,1)
+            console.log(availUser)
+            try{
+                let code=cid.toString()+Arrange[i].rid.toString()+(j+1).toString()+User.toString()
+                await admission.create({uid:User,cid:cid,rid:Arrange[i].rid,seat:j+1,admissionNumber:code})
+                j+=1
+            }catch(e){
+                console.error(e.message)
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'生成失败'
+                    }
+                }
+            }
+        }
+    }
+    ctx.body={
+        code:0,
+        data:{
+            message:'生成成功'
+        }
+    }
+}
+
+const showAdm=async (ctx,next)=>{
+    const {cid}=ctx.request.query
+    const Contest=await contest.findOne({where:{cid:cid},attributes:['type']})
+    if(Contest.type=='single'){
+        let data=await admission.findAll({where:{cid:cid},attributes:['uid','rid','seat','admissionNumber'],raw:true})
+        for(x of data){
+            const Room=await room.findOne({where:{rid:x.rid},attributes:['name','address']})
+            x['name']=Room.name
+            x['address']=Room.address
+            const Uid=await student.findOne({where:{sid:x.uid},attributes:['chineseName']})
+            x['sname']=Uid.chineseName
+        }
+        ctx.body={
+            code:0,
+            data
+        }
+    }else if(Contest.type=='group'){
+        let data=await admission.findAll({where:{cid:cid},attributes:['uid','rid','seat','admissionNumber'],raw:true})
+        for(x of data){
+            const Room=await room.findOne({where:{rid:x.rid},attributes:['name','address']})
+            x['name']=Room.name
+            x['address']=Room.address
+            const Group=await applyGroup.findOne({where:{gid:x.uid},attributes:['groupName']})
+            x['gName']=Group.groupName
+        }
+        ctx.body={
+            code:0,
+            data
+        }
+    }
+}
+
+const studentShowAdm=async (ctx,next)=>{
+    const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
+    const uid=token['uid']
+    const {cid}=ctx.request.query
+    const C=await contest.findOne({where:{cid:cid},attributes:['type']})
+    if(C.type=='single'){
+        var Uid=uid
+    }else if(C.type=='group'){
+        const Gid=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid',{
+            replacements:{cid:cid,uid:uid},
+            type:QueryTypes.SELECT
+        })
+        var Uid=Gid[0].gid
+    }
+    try{
+        let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
+        const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
+        data['rName']=Room.address+Room.name
+        data['rid']=undefined
+        ctx.body={
+            code:0,
+            data
+        }
+    }catch(e){
+        console.error(e.message)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'查询错误'
+            }
+        }
+    }
+    
+}
+
+
 module.exports={
     addRoom,
     updateRoom,
@@ -262,5 +401,8 @@ module.exports={
     showArrange,
     cancelArrange,
     updateArrange,
-    AvailableRoom
+    AvailableRoom,
+    createAdmission,
+    showAdm,
+    studentShowAdm
 }
