@@ -78,7 +78,7 @@ const updateGrade=async (ctx,next)=>{
     const {id,type,grade}=ctx.request.body
     if(type=='single'){
         try{
-            await applySingle.update({grade:grade},{id:id})
+            await applySingle.update({grade:grade},{where:{id:id}})
             ctx.body={
                 code:0,
                 data:{
@@ -97,7 +97,7 @@ const updateGrade=async (ctx,next)=>{
     }
     else if(type=='group'){
         try{
-            await applyGroup.update({grade:grade},{gid:id})
+            await applyGroup.update({grade:grade},{where:{gid:id}})
             ctx.body={
                 code:0,
                 data:{
