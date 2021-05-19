@@ -163,13 +163,14 @@ const showExecl=async (ctx,next)=>{
             code:0,
             result
         }*/
+        console.log(_data)
         let buffer=XlSX.build([{name:'sheet1',data:_data}])
-        //let filename=Contest.name+'成绩模板.xlsx'
+        let filename=Contest.name+'成绩模板.xlsx'
         //fs.writeFileSync(filename,buffer)
-        ctx.body={
-            code:0,
-            buffer
-        }
+        //ctx.set('Content-Type', 'application/octet-stream,charset=UTF-8')
+        let res=fs.writeFileSync(filename,buffer)
+        ctx.body=fs.readFileSync(filename)
+        ctx.set('Content-Type', 'application/octet-stream')
     }else if(Contest.type=='group'){
         const headers=['序号','赛事名称','团队名称','成绩']
         let data=await applyGroup.findAll({where:{cid:cid,status:'1'},attributes:['gid','groupName'],raw:true})
@@ -182,11 +183,12 @@ const showExecl=async (ctx,next)=>{
             _data.push(d)
         }
         let buffer=XlSX.build([{name:'sheet1',data:_data}])
+        let filename=Contest.name+'成绩模板.xlsx'
+        //fs.writeFileSync(filename,buffer)
+        //ctx.set('Content-Type', 'application/octet-stream,charset=UTF-8')
+        let res=fs.writeFileSync(filename,buffer)
+        ctx.body=fs.readFileSync(filename)
         ctx.set('Content-Type', 'application/octet-stream')
-        ctx.body={
-            code:0,
-            buffer
-        }
     }else{
         ctx.body={
             code:-1,
