@@ -296,6 +296,9 @@ const createAdmission=async (ctx,next)=>{
             i+=1
             j=0
         }
+        else if(availUser.length==0){
+            break
+        }
         else{
             var index = Math.floor((Math.random()*availUser.length))
             let User=availUser[index]
@@ -303,6 +306,7 @@ const createAdmission=async (ctx,next)=>{
             //console.log(availUser)
             try{
                 let code=cid.toString()+Arrange[i].rid.toString()+(j+1).toString()+User.toString()
+                //let code=cid.toString()+(j+1).toString()
                 await admission.create({uid:User,cid:cid,rid:Arrange[i].rid,seat:j+1,admissionNumber:code})
                 j+=1
             }catch(e){
