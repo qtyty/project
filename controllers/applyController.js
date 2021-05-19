@@ -221,7 +221,7 @@ const groupApply=async (ctx,next)=>{
             }
         }
     }
-    else if(ApplySelect){
+    else if(ApplySelect.length>0){
         ctx.body={
             code:-2,
             data:{
