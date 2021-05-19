@@ -187,7 +187,7 @@ const groupApply=async (ctx,next)=>{
             if(user) {
                 Select.push(user.school)
                 UserSelect.push(user.uid)
-                const Apply=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid', {
+                const Apply=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid and a.status!=-1', {
                     replacements:{uid:user.uid,cid:cid},
                     type: QueryTypes.SELECT
                   })

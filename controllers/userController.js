@@ -614,7 +614,7 @@ const deleteUniversity=async (ctx,next)=>{
         try{
             let Select=[]
             for(x of id){
-                console.log(x)
+                //console.log(x)
                 const S=await student.findOne({where:{school:x},attributes:['sid']})
                 const T=await teacher.findOne({where:{school:x},attributes:['tid']})
                 if(S || T){
@@ -625,7 +625,8 @@ const deleteUniversity=async (ctx,next)=>{
                     await University.destroy({where:{id:x}})
                 }
             }
-            if(Select){
+            //console.log(Select)
+            if(Select.length>0){
                 str=Select.join(',')
                 ctx.body={
                     code:-1,
@@ -699,7 +700,7 @@ const checkFalse=async (ctx,next)=>{
                 await University.update({status:-1},{where:{id:x}})
             }
         }
-        if(Select){
+        if(Select.length>0){
             str=Select.join(',')
             ctx.body={
                 code:-1,
@@ -712,7 +713,7 @@ const checkFalse=async (ctx,next)=>{
             ctx.body={
                 code:0,
                 data:{
-                    message:'删除成功'
+                    message:'审核成功'
                 }
             }
         }
