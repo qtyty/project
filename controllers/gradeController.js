@@ -182,6 +182,7 @@ const showExecl=async (ctx,next)=>{
             _data.push(d)
         }
         let buffer=XlSX.build([{name:'sheet1',data:_data}])
+        ctx.set('Content-Type', 'application/octet-stream')
         ctx.body={
             code:0,
             buffer

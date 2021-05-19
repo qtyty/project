@@ -187,11 +187,11 @@ const groupApply=async (ctx,next)=>{
             if(user) {
                 Select.push(user.school)
                 UserSelect.push(user.uid)
-                const Apply=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid and a.status!=-1', {
+                const Apply=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid and a.status<>-1', {
                     replacements:{uid:user.uid,cid:cid},
                     type: QueryTypes.SELECT
                   })
-                if(Apply) ApplySelect.push(user.chineseName)
+                if(Apply.length>0) ApplySelect.push(user.chineseName)
             }
             else break
         }
@@ -222,6 +222,7 @@ const groupApply=async (ctx,next)=>{
         }
     }
     else if(ApplySelect.length>0){
+        //console.log(ApplySelect)
         ctx.body={
             code:-2,
             data:{

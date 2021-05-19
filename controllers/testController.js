@@ -366,29 +366,68 @@ const studentShowAdm=async (ctx,next)=>{
     const {cid}=ctx.request.query
     const C=await contest.findOne({where:{cid:cid},attributes:['type']})
     if(C.type=='single'){
-        var Uid=uid
+        try{
+            var Uid=uid
+            let data1=await student.findOne({where:{sid:Uid},attributes:{exclude:['sid']},raw:true})
+            let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
+            const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
+            data['rName']=Room.address+Room.name
+            data['rid']=undefined
+            let School=await University.findOne({where:{id:data1.school},attributes:['name']})
+            data1['school']=School.name
+            console.log(data)
+            console.log(data1)
+            result=Object.assign(data,data1)
+            ctx.body={
+                code:0,
+                result
+            }
+        }catch(e){
+            console.error(e.message)
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'查询错误'
+                }
+            }
+        }
     }else if(C.type=='group'){
         const Gid=await sequelize.query('select a.gid from applygroup a,groupteam b where a.gid=b.gid and b.uid= :uid and a.cid= :cid',{
             replacements:{cid:cid,uid:uid},
             type:QueryTypes.SELECT
         })
         var Uid=Gid[0].gid
-    }
-    try{
-        let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
-        const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
-        data['rName']=Room.address+Room.name
-        data['rid']=undefined
-        ctx.body={
-            code:0,
-            data
-        }
-    }catch(e){
-        console.error(e.message)
-        ctx.body={
-            code:-1,
-            data:{
-                message:'查询错误'
+        try{
+            let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
+            const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
+            data['rName']=Room.address+Room.name
+            data['rid']=undefined
+            let data1=await applyGroup.findOne({where:{gid:Uid},raw:true,attributes:{exclude:['suid','grade']},raw:true})
+            const Teacher=await teacher.findOne({where:{tid:data1.tid},attributes:['chineseName']})
+            data1['tname']=Teacher.chineseName
+            let members=await groupTeam.findAll({where:{gid:Uid},raw:true,attributes:['uid']})
+            let Select=[]
+            for(x of members){
+                let data2=await student.findOne({where:{sid:x.uid},attributes:{exclude:['sid']},raw:true})
+                const School=await University.findOne({where:{id:data2.school},attributes:['name']})
+                data2['school']=School.name
+                Select.push(data2)
+            }
+            data1['members']=Select
+            console.log(data)
+            console.log(data1)
+            result=Object.assign(data,data1)
+            ctx.body={
+                code:0,
+                result
+            }
+        }catch(e){
+            console.error(e.message)
+            ctx.body={
+                code:-1,
+                data:{
+                    message:'查询错误'
+                }
             }
         }
     }
