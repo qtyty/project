@@ -364,7 +364,7 @@ const studentShowAdm=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
     const {cid}=ctx.request.query
-    const C=await contest.findOne({where:{cid:cid},attributes:['type']})
+    const C=await contest.findOne({where:{cid:cid},attributes:['type','name']})
     if(C.type=='single'){
         try{
             var Uid=uid
@@ -373,10 +373,12 @@ const studentShowAdm=async (ctx,next)=>{
             const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
             data['rName']=Room.address+Room.name
             data['rid']=undefined
+            data['cname']=C.name
+            data['type']='个人赛'
             let School=await University.findOne({where:{id:data1.school},attributes:['name']})
             data1['school']=School.name
-            console.log(data)
-            console.log(data1)
+            //console.log(data)
+            //console.log(data1)
             result=Object.assign(data,data1)
             ctx.body={
                 code:0,
@@ -402,6 +404,8 @@ const studentShowAdm=async (ctx,next)=>{
             const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
             data['rName']=Room.address+Room.name
             data['rid']=undefined
+            data['cname']=C.name
+            data['type']='团队赛'
             let data1=await applyGroup.findOne({where:{gid:Uid},raw:true,attributes:{exclude:['suid','grade']},raw:true})
             const Teacher=await teacher.findOne({where:{tid:data1.tid},attributes:['chineseName']})
             data1['tname']=Teacher.chineseName
@@ -414,8 +418,8 @@ const studentShowAdm=async (ctx,next)=>{
                 Select.push(data2)
             }
             data1['members']=Select
-            console.log(data)
-            console.log(data1)
+            //console.log(data)
+            //console.log(data1)
             result=Object.assign(data,data1)
             ctx.body={
                 code:0,

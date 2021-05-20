@@ -165,11 +165,16 @@ const showExecl=async (ctx,next)=>{
         }*/
         console.log(_data)
         let buffer=XlSX.build([{name:'sheet1',data:_data}])
-        let filename=Contest.name+'成绩模板.xlsx'
+        let filename='./data/'+Contest.name+'成绩模板.xlsx'
         //fs.writeFileSync(filename,buffer)
         //ctx.set('Content-Type', 'application/octet-stream,charset=UTF-8')
-        let res=fs.writeFileSync(filename,buffer)
-        ctx.body=fs.readFileSync(filename)
+        fs.writeFileSync(filename,buffer)
+        let result=fs.readFileSync(filename)
+        //console.log(Buffer.isBuffer(result))
+        //ctx.body=fs.readFile(filename)
+        let Data = Buffer.from(result)
+        console.log(Data)
+        ctx.body=result
         ctx.set('Content-Type', 'application/octet-stream')
     }else if(Contest.type=='group'){
         const headers=['序号','赛事名称','团队名称','成绩']
@@ -188,7 +193,7 @@ const showExecl=async (ctx,next)=>{
         //ctx.set('Content-Type', 'application/octet-stream,charset=UTF-8')
         let res=fs.writeFileSync(filename,buffer)
         ctx.body=fs.readFileSync(filename)
-        ctx.set('Content-Type', 'application/octet-stream')
+        //ctx.set('Content-Type', 'application/octet-stream')
     }else{
         ctx.body={
             code:-1,
