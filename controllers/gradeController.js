@@ -144,13 +144,13 @@ const showExecl=async (ctx,next)=>{
             const S=await student.findOne({where:{sid:x.uid},attributes:['chineseName','id']})
             x['name']=S.chineseName
             x['cname']=Contest.name
-            x['id']=S.id
+            x['sid']=S.id
             //x['uid']=undefined
         }
         //console.log(data)
         let _data=[headers]
         for(x of data){
-            let d=[x.id,x.cname,x.id,x.name,'']
+            let d=[x.id,x.cname,x.sid,x.name,'']
             _data.push(d)
         }
         //console.log(_data)
