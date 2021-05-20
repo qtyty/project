@@ -722,7 +722,7 @@ const checkApplyFalse=async (ctx,next)=>{
                 await applySingle.update({status:'-1',remark:x.remark},{where:{id:x.id}})
             }
             else if(x.type=='group'){
-                await applyGroup.update({status:'-1',remark:x.remark},{where:{id:x.id}})
+                await applyGroup.update({status:'-1',remark:x.remark},{where:{gid:x.id}})
             }
         }
         ctx.body={
