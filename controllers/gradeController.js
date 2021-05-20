@@ -168,13 +168,14 @@ const showExecl=async (ctx,next)=>{
         let filename='./data/'+Contest.name+'成绩模板.xlsx'
         //fs.writeFileSync(filename,buffer)
         //ctx.set('Content-Type', 'application/octet-stream,charset=UTF-8')
-        fs.writeFileSync(filename,buffer)
+        fs.writeFileSync(filename,buffer,'binary')
         let result=fs.readFileSync(filename)
         //console.log(Buffer.isBuffer(result))
         //ctx.body=fs.readFile(filename)
         let Data = Buffer.from(result)
         console.log(Data)
-        ctx.body=result
+        //ctx.body=result
+        ctx.body=Data
         ctx.set('Content-Type', 'application/octet-stream')
     }else if(Contest.type=='group'){
         const headers=['序号','赛事名称','团队名称','成绩']

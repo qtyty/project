@@ -244,10 +244,13 @@ const groupApply=async (ctx,next)=>{
     }
     try{
         const gid=await applyGroup.findOne({where:{cid:cid,groupName:groupName,tid:tid}})
-        console.log(Select)
-        console.log(gid)
+        //console.log(Select)
+        //console.log(gid)
         for(x of Select){
-            await groupTeam.create({gid:gid.gid,uid:x})
+            const User=await groupTeam.findOne({where:{gid:gid.gid,uid:x}})
+            if(!User){
+                await groupTeam.create({gid:gid.gid,uid:x})
+            }
         }
         ctx.body={
             code:0,
