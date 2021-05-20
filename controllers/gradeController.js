@@ -138,18 +138,19 @@ const showExecl=async (ctx,next)=>{
     const {cid}=ctx.request.query
     const Contest=await contest.findOne({where:{cid:cid},attributes:['name','type']})
     if(Contest.type=='single'){
-        const headers=['序号','赛事名称','姓名','成绩']
+        const headers=['序号','赛事名称','学号','姓名','成绩']
         let data=await applySingle.findAll({where:{cid:cid,status:'1'},attributes:['uid','id'],raw:true})
         for(x of data){
-            const S=await student.findOne({where:{sid:x.uid},attributes:['chineseName']})
+            const S=await student.findOne({where:{sid:x.uid},attributes:['chineseName','id']})
             x['name']=S.chineseName
             x['cname']=Contest.name
+            x['id']=S.id
             //x['uid']=undefined
         }
         //console.log(data)
         let _data=[headers]
         for(x of data){
-            let d=[x.id,x.cname,x.name,'']
+            let d=[x.id,x.cname,x.id,x.name,'']
             _data.push(d)
         }
         //console.log(_data)
@@ -189,12 +190,12 @@ const showExecl=async (ctx,next)=>{
             _data.push(d)
         }
         let buffer=XlSX.build([{name:'sheet1',data:_data}])
-        let filename=Contest.name+'成绩模板.xlsx'
+        let filename='./data/'+Contest.name+'成绩模板.xlsx'
         //fs.writeFileSync(filename,buffer)
         //ctx.set('Content-Type', 'application/octet-stream,charset=UTF-8')
-        let res=fs.writeFileSync(filename,buffer)
+        let res=fs.writeFileSync(filename,buffer,'binary')
         ctx.body=fs.readFileSync(filename)
-        //ctx.set('Content-Type', 'application/octet-stream')
+        ctx.set('Content-Type', 'application/octet-stream')
     }else{
         ctx.body={
             code:-1,
