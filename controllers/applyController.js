@@ -247,10 +247,7 @@ const groupApply=async (ctx,next)=>{
         //console.log(Select)
         //console.log(gid)
         for(x of UserSelect){
-            const User=await groupTeam.findOne({where:{gid:gid.gid,uid:x}})
-            if(!User){
                 await groupTeam.create({gid:gid.gid,uid:x})
-            }
         }
         ctx.body={
             code:0,

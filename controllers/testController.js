@@ -368,21 +368,50 @@ const studentShowAdm=async (ctx,next)=>{
     if(C.type=='single'){
         try{
             var Uid=uid
-            let data1=await student.findOne({where:{sid:Uid},attributes:{exclude:['sid']},raw:true})
-            let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
-            const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
-            data['rName']=Room.address+Room.name
-            data['rid']=undefined
-            data['cname']=C.name
-            data['type']='个人赛'
-            let School=await University.findOne({where:{id:data1.school},attributes:['name']})
-            data1['school']=School.name
-            //console.log(data)
-            //console.log(data1)
-            result=Object.assign(data,data1)
-            ctx.body={
-                code:0,
-                result
+            let Arrange=await arrange.findAll({where:{cid:cid},attributes:['rid'],raw:true})
+            if(Arrange.length>0){
+                let data1=await student.findOne({where:{sid:Uid},attributes:{exclude:['sid']},raw:true})
+                let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
+                if(data){
+                    const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
+                   // if(Room){
+                        data['rName']=Room.address+Room.name
+                        data['rid']=undefined
+                        data['cname']=C.name
+                        data['type']='个人赛'
+                        let School=await University.findOne({where:{id:data1.school},attributes:['name']})
+                        data1['school']=School.name
+                        //console.log(data)
+                        //console.log(data1)
+                        result=Object.assign(data,data1)
+                        ctx.body={
+                            code:0,
+                            result
+                        }
+                    //}
+                    // else{
+                    //     ctx.body={
+                    //         code:-1,
+                    //         data:{
+                    //             message:'管理员未安排考场'
+                    //         }
+                    //     }
+                    // } 
+                }else{
+                    ctx.body={
+                        code:-1,
+                        data:{
+                            message:'管理员未生成准考证'
+                        }
+                    }
+                }
+            } else{
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'管理员未安排考场'
+                    }
+                }
             }
         }catch(e){
             console.error(e.message)
@@ -400,30 +429,59 @@ const studentShowAdm=async (ctx,next)=>{
         })
         var Uid=Gid[0].gid
         try{
-            let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
-            const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
-            data['rName']=Room.address+Room.name
-            data['rid']=undefined
-            data['cname']=C.name
-            data['type']='团队赛'
-            let data1=await applyGroup.findOne({where:{gid:Uid},raw:true,attributes:{exclude:['suid','grade']},raw:true})
-            const Teacher=await teacher.findOne({where:{tid:data1.tid},attributes:['chineseName']})
-            data1['tname']=Teacher.chineseName
-            let members=await groupTeam.findAll({where:{gid:Uid},raw:true,attributes:['uid']})
-            let Select=[]
-            for(x of members){
-                let data2=await student.findOne({where:{sid:x.uid},attributes:{exclude:['sid']},raw:true})
-                const School=await University.findOne({where:{id:data2.school},attributes:['name']})
-                data2['school']=School.name
-                Select.push(data2)
-            }
-            data1['members']=Select
-            //console.log(data)
-            //console.log(data1)
-            result=Object.assign(data,data1)
-            ctx.body={
-                code:0,
-                result
+            let Arrange=await arrange.findAll({where:{cid:cid},attributes:['rid'],raw:true})
+           // console.log(Arrange)
+            if(Arrange.length>0){
+                let data=await admission.findOne({where:{uid:Uid,cid:cid},attributes:['rid','seat','admissionNumber'],raw:true})
+                if(data){
+                    const Room=await room.findOne({where:{rid:data.rid},attributes:['name','address']})
+                    //if(Room){
+                        data['rName']=Room.address+Room.name
+                        data['rid']=undefined
+                        data['cname']=C.name
+                        data['type']='团队赛'
+                        let data1=await applyGroup.findOne({where:{gid:Uid},raw:true,attributes:{exclude:['suid','grade']},raw:true})
+                        const Teacher=await teacher.findOne({where:{tid:data1.tid},attributes:['chineseName']})
+                        data1['tname']=Teacher.chineseName
+                        let members=await groupTeam.findAll({where:{gid:Uid},raw:true,attributes:['uid']})
+                        let Select=[]
+                        for(x of members){
+                            let data2=await student.findOne({where:{sid:x.uid},attributes:{exclude:['sid']},raw:true})
+                            const School=await University.findOne({where:{id:data2.school},attributes:['name']})
+                            data2['school']=School.name
+                            Select.push(data2)
+                        }
+                        data1['members']=Select
+                        //console.log(data)
+                        //console.log(data1)
+                        result=Object.assign(data,data1)
+                        ctx.body={
+                            code:0,
+                            result
+                        }
+                    // }else{
+                    //     ctx.body={
+                    //         code:-1,
+                    //         data:{
+                    //             message:'管理员未安排考场'
+                    //         }
+                    //     }
+                    // }
+                }else{
+                    ctx.body={
+                        code:-1,
+                        data:{
+                            message:'管理员未生成准考证'
+                        }
+                    }
+                }
+            }else{
+                ctx.body={
+                    code:-1,
+                    data:{
+                        message:'管理员未安排考场'
+                    }
+                }
             }
         }catch(e){
             console.error(e.message)
@@ -435,7 +493,6 @@ const studentShowAdm=async (ctx,next)=>{
             }
         }
     }
-    
 }
 
 
