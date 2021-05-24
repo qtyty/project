@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken')
 const secret='secret'
 const datetime=require('silly-datetime')
 const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
-const {User,student,teacher,University,checkUniversity} = require('../util/model/User');
+const {User,student,teacher,University,manager} = require('../util/model/User');
 const cookieParser = require('cookie-parser');
 
 const showContest=async (ctx,next)=>{

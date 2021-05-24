@@ -11,7 +11,7 @@
  Target Server Version : 80022
  File Encoding         : 65001
 
- Date: 20/05/2021 15:22:18
+ Date: 21/05/2021 17:21:21
 */
 
 SET NAMES utf8mb4;
@@ -93,18 +93,6 @@ CREATE TABLE `contest`  (
   `state` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   PRIMARY KEY (`cid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for grade
--- ----------------------------
-DROP TABLE IF EXISTS `grade`;
-CREATE TABLE `grade`  (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cid` int NULL DEFAULT NULL,
-  `aid` int NULL DEFAULT NULL,
-  `grade` int NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------

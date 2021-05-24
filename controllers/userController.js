@@ -1,5 +1,4 @@
 const {User,student,teacher,University,manager} = require('../util/model/User')
-const {checkTeacher,checkStudent}=require('../util/model/check')
 const nodemailer = require('nodemailer')
 const userEmail = '2253353503@qq.com'
 const random=require('string-random')
@@ -9,6 +8,8 @@ const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 var cache=require('memory-cache')
 const { accessSync } = require('fs')
+const bcrypt = require('bcrypt')
+
 const transporter = nodemailer.createTransport({
   host:'smtp.qq.com',
   port: 465,
@@ -18,6 +19,16 @@ const transporter = nodemailer.createTransport({
     pass: 'edosazeetaefebcj'  //这个是开启`POP3/SMTP/IMAP`的授权码
   }
 })
+
+async function Bcrypt(password){
+    const salt = await bcrypt.genSalt(10)
+    const result = await bcrypt.hash(password, salt)
+    return result
+}
+
+async function passwordCompare(password,code){//明文，加密
+    return await bcrypt.compare(password,code)
+}
 
 const sendCode=async (ctx,next)=>{
     const {email}=ctx.request.body
@@ -158,7 +169,8 @@ const register=async (ctx,next)=>{
         }
         else{
             if(Code==code){
-                await User.create({email:email,password:password,status:status})
+                const code=await Bcrypt(password)
+                await User.create({email:email,password:code,status:status})
                 ctx.body={
                     code:0,
                     data:{
@@ -199,7 +211,8 @@ const login=async (ctx,next)=>{
             }
         }
         else{
-        if(email==user.email && password==user.password){
+        //if(email==user.email && password==user.password){
+        if(email==user.email && await passwordCompare(password,user.password)){
             if(status==user.status){
                 ctx.body={
                     code:0,
