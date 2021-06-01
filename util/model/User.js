@@ -1,6 +1,12 @@
 // 导入创建模型需要的函数
 const { FailedDependency } = require('http-errors')
 const {Sequelize,sequelize} = require('../init')
+const bcrypt = require('bcrypt')
+async function Bcrypt(password){
+    const salt = await bcrypt.genSalt(10)
+    const result = await bcrypt.hash(password, salt)
+    return result
+}
 
 const User=sequelize.define('User',{
     uid:{type:Sequelize.INTEGER,primaryKey:true,autoIncrement: true},
@@ -12,6 +18,7 @@ const User=sequelize.define('User',{
     timestamps: false,
     freezeTableName: true
   })
+
 
 const student=sequelize.define('student',{
     sid:{type:Sequelize.INTEGER,primaryKey: true},
@@ -135,4 +142,13 @@ const checkUniversity=sequelize.define('checkUniverisity',{
 
 //sequelize.sync({force:true}).then(()=>{console.log('模型同步')})
 sequelize.sync().then(()=>{console.log('模型同步')})
+// .then(async ()=>{
+//     const Manager=await User.findOne({where:{email:'123456@qq.com'}})
+//     const code='123456er'
+//     if(!Manager){
+//          await User.create({email:'123456@qq.com',password:await Bcrypt(code),status:'manager'})
+//     }
+// })
+
+
 module.exports={User,student,teacher,University,manager}

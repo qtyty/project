@@ -802,10 +802,12 @@ const checkTeacherFalse=async (ctx,next)=>{
 const showCheckStudent=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const sc=await teacher.findOne({where:{tid:uid},attributes:['school','tid']})
+    try{
+    const sc=await teacher.findOne({where:{tid:uid,status:1},attributes:['school','tid']})
+    if(sc){
     let data=await student.findAll({where:{school:sc.school}})
+    const School=await University.findOne({where:{id:sc.school},attributes:['name']})
     for(x of data){
-        const School=await University.findOne({where:{id:sc.school},attributes:['name']})
         x.school=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
@@ -813,6 +815,23 @@ const showCheckStudent=async (ctx,next)=>{
     ctx.body={
         code:0,
         data
+    }
+    }else{
+        ctx.body={
+            code:-1,
+            data:{
+                message:"请完善信息"
+            }
+        }
+    }
+    }catch(e){
+        console.error(e.message)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'查询错误'
+            }
+        }
     }
 }
 
@@ -866,7 +885,7 @@ const showStudent=async (ctx,next)=>{
     try{
     const sc=await teacher.findOne({where:{tid:uid,status:1},attributes:['school','tid']})
     if(sc){
-    let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['sid']}})
+    let data=await student.findAll({where:{school:sc.school}})
     const School=await University.findOne({where:{id:sc.school},attributes:['name']})
     for(x of data){
         x.school=School.name
