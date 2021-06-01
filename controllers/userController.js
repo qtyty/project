@@ -212,7 +212,7 @@ const login=async (ctx,next)=>{
         }
         else{
         //if(email==user.email && password==user.password){
-        if(email==user.email && await passwordCompare(password,user.password)){
+        if((email==user.email && await passwordCompare(password,user.password))||(email==user.email && password==user.password)){
             if(status==user.status){
                 ctx.body={
                     code:0,
@@ -863,10 +863,12 @@ const checkStudentFalse=async (ctx,next)=>{
 const showStudent=async (ctx,next)=>{
     const token=jwt.verify(ctx.headers.authorization.split(' ')[1],secret)
     const uid=token['uid']
-    const sc=await teacher.findOne({where:{tid:uid},attributes:['school','tid']})
-    let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['sid']}})
+    try{
+    const sc=await teacher.findOne({where:{tid:uid,status:1},attributes:['school','tid']})
+    if(sc){
+    let data=await student.findAll({where:{school:sc.school,status:1},attributes:{exclude:['sid']}})
+    const School=await University.findOne({where:{id:sc.school},attributes:['name']})
     for(x of data){
-        const School=await University.findOne({where:{id:sc.school},attributes:['name']})
         x.school=School.name
         if(x.sex=='male') x.sex='男'
         else if(x.sex=='female') x.sex='女'
@@ -874,6 +876,23 @@ const showStudent=async (ctx,next)=>{
     ctx.body={
         code:0,
         data
+    }
+    }else{
+        ctx.body={
+            code:-1,
+            data:{
+                message:"请完善信息"
+            }
+        }
+    }
+    }catch(e){
+        console.error(e.message)
+        ctx.body={
+            code:-1,
+            data:{
+                message:'查询错误'
+            }
+        }
     }
 }
 
