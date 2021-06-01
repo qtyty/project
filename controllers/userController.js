@@ -866,7 +866,7 @@ const showStudent=async (ctx,next)=>{
     try{
     const sc=await teacher.findOne({where:{tid:uid,status:1},attributes:['school','tid']})
     if(sc){
-    let data=await student.findAll({where:{school:sc.school,status:1},attributes:{exclude:['sid']}})
+    let data=await student.findAll({where:{school:sc.school},attributes:{exclude:['sid']}})
     const School=await University.findOne({where:{id:sc.school},attributes:['name']})
     for(x of data){
         x.school=School.name
