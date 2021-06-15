@@ -7,11 +7,11 @@ const Op = Sequelize.Op
 const jwt = require('jsonwebtoken')
 const secret='secret'
 const datetime=require('silly-datetime')
-const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
 const {User,student,teacher,University,manager} = require('../util/model/User');
 const cookieParser = require('cookie-parser');
 
 const showContest=async (ctx,next)=>{
+    const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     const data=await contest.findAll({attributes:['cid','name','type',
     [Sequelize.fn('date_format',Sequelize.col('startApp'),'%Y-%m-%d'),'startApp'],
     [Sequelize.fn('date_format',Sequelize.col('endApp'),'%Y-%m-%d'),'endApp'],
@@ -460,6 +460,7 @@ const showTeacher=async (ctx,next)=>{
 }
 
 const showContestIng=async (ctx,next)=>{
+    const date = datetime.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
     const data=await contest.findAll({attributes:['cid','name',],where:{state:'published', startApp:{[Op.lte]:date},endHold:{[Op.gte]:date}}})
     ctx.body={
         code:0,
